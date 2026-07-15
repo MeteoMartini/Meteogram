@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Open-Meteo Ensemble-Meteogramm</title>
+<style>
+:root {
+  --bg:#eef2f6; --card:#fff; --text:#17212b; --muted:#607080;
+  --border:#d8e1e8; --accent:#1769aa; --grid:#dce5eb;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0; padding:16px; background:var(--bg); color:var(--text);
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+.card {
+  max-width:1250px; margin:auto; background:var(--card); border:1px solid var(--border);
+  border-radius:16px; overflow:hidden; box-shadow:0 6px 22px rgba(20,40,60,.08);
+}
+header { padding:20px 20px 12px; }
+h1 { margin:0 0 6px; font-size:clamp(1.35rem,4vw,2rem); }
+header p { margin:0; color:var(--muted); line-height:1.45; }
+.controls {
+  display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px;
+  padding:16px 20px; background:#f8fafc; border-block:1px solid var(--border);
+}
+label { display:flex; flex-direction:column; gap:5px; font-size:.82rem; color:var(--muted); }
+input,select,button {
+  min-height:44px; width:100%; border-radius:9px; border:1px solid var(--border);
+  background:#fff; color:var(--text); font:inherit; padding:9px 10px;
+}
+button { border:0; background:var(--accent); color:#fff; font-weight:700; cursor:pointer; }
+button.secondary { background:#42576a; }
+button:disabled { opacity:.55; cursor:default; }
+#status { min-height:44px; padding:12px 20px 6px; color:var(--muted); font-size:.92rem; }
+#status.error { color:#a11d1d; font-weight:600; }
+#chartWrap { padding:0 10px 10px; overflow-x:auto; }
+#chart {
+  display:block; width:100%; min-width:760px; height:610px;
+  touch-action:pan-x pan-y;
+}
+.legend {
+  display:flex; flex-wrap:wrap; gap:14px; padding:0 20px 16px;
+  color:var(--muted); font-size:.85rem;
+}
+.key { display:flex; align-items:center; gap:6px; }
+.swatch { width:25px; height:10px; border-radius:3px; }
+.line { width:25px; border-top:3px solid #165b91; }
+.note { padding:0 20px 20px; color:var(--muted); font-size:.82rem; line-height:1.45; }
+@media(max-width:900px) {
+  .controls { grid-template-columns:1fr 1fr; }
+  .controls button:last-child { grid-column:span 2; }
+}
+@media(max-width:520px) {
+  body { padding:6px; }
+  .controls { grid-template-columns:1fr; }
+  .controls button:last-child { grid-column:auto; }
+}
+</style>
+</head>
+<body>
+<main class="card">
+  <header>
+    <h1>Ensemble-Meteogramm</h1>
+    <p>DWD ICON-EPS: Mittelwert und Unsicherheitsbänder der Temperaturprognose.</p>
+  </header>
+
+  <section class="controls">
+    <label>Breitengrad
+      <input id="lat" type="number" step="0.0001" value="51.9487">
+    </label>
+    <label>Längengrad
+      <input id="lon" type="number" step="0.0001" value="7.6745">
+    </label>
+    <label>Zeitraum
+      <select id="days">
+        <option value="3">3 Tage</option>
+        <option value="5">5 Tage</option>
+        <option value="7" selected>7 Tage</option>
+        <option value="10">10 Tage</option>
+        <option value="14">14 Tage</option>
+      </select>
+    </label>
+    <button id="locationBtn" class="secondary" type="button">📍 Meinen Standort übernehmen</button>
+    <button id="loadBtn" type="button">Meteogramm laden</button>
+  </section>
+
+  <div id="status">Bereit.</div>
+  <div id="chartWrap"><svg id="chart" role="img" aria-label="Temperatur-Meteogramm"></svg></div>
+
+  <div class="legend">
+    <span class="key"><span class="line"></span>Ensemble-Mittel</span>
+    <span class="key"><span class="swatch" style="background:rgba(23,105,170,.28)"></span>±1 Standardabweichung</span>
+    <span class="key"><span class="swatch" style="background:rgba(23,105,170,.12)"></span>±1,96 Standardabweichungen</span>
+  </div>
+  <div class="note">
+    Je breiter die Schattierung, desto größer die Streuung der Ensemble-Mitglieder.
+    Die Standortermittlung benötigt eine Standortfreigabe des Browsers. Bei lokalen Dateien
+    kann sie je nach Browser eingeschränkt sein; über eine HTTPS-Webseite funktioniert sie zuverlässig.
+  </div>
+</main>
+
+<script>
+"use strict";
+
+const NS = "http://www.w3.org/2000/svg";
+const MODEL = "dwd_icon_eps_ensemble_mean_seamless";
+
+const $ = id => document.getElementById(id);
+const statusEl = $("status");
+const loadBtn = $("loadBtn");
+const locationBtn = $("locationBtn");
+
+function setStatus(text, error=false) {
+  statusEl.textContent = text;
+  statusEl.classList.toggle("error", error);
+}
+
+function svgEl(name, attrs={}) {
+  const el = document.createElementNS(NS, name);
+  for (const [k,v] of Object.entries(attrs)) el.setAttribute(k, String(v));
+  return el;
+}
+
+function apiUrl() {
+  const lat = Number($("lat").value);
+  const lon = Number($("lon").value);
+  const days = Number($("days").value);
+  if (!Number.isFinite(lat) || lat < -90 || lat > 90) throw new Error("Ungültiger Breitengrad.");
+  if (!Number.isFinite(lon) || lon < -180 || lon > 180) throw new Error("Ungültiger Längengrad.");
+
+  const p = new URLSearchParams({
+    latitude:String(lat),
+    longitude:String(lon),
+    hourly:"temperature_2m,temperature_2m_spread",
+    models:MODEL,
+    timezone:"auto",
+    forecast_days:String(days)
+  });
+  return "https://ensemble-api.open-meteo.com/v1/ensemble?" + p.toString();
+}
+
+function pathFrom(points) {
+  return points.map((p,i)=>(i ? "L" : "M") + p[0].toFixed(2) + "," + p[1].toFixed(2)).join(" ");
+}
+
+function bandPath(upper, lower) {
+  const a = pathFrom(upper);
+  const b = lower.slice().reverse().map(p=>"L"+p[0].toFixed(2)+","+p[1].toFixed(2)).join(" ");
+  return a + " " + b + " Z";
+}
+
+function drawChart(times, mean, spread) {
+  const svg = $("chart");
+  svg.replaceChildren();
+
+  const W = 1200, H = 610;
+  const m = {l:68, r:24, t:45, b:70};
+  const pw = W-m.l-m.r, ph = H-m.t-m.b;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+
+  const valid = times.map((t,i)=>({t:new Date(t), mean:mean[i], spread:spread[i]}))
+    .filter(d=>Number.isFinite(d.mean) && Number.isFinite(d.spread) && !isNaN(d.t));
+
+  if (valid.length < 2) throw new Error("Zu wenige gültige Datenpunkte.");
+
+  const lows = valid.map(d=>d.mean-1.96*d.spread);
+  const highs = valid.map(d=>d.mean+1.96*d.spread);
+  let ymin = Math.floor(Math.min(...lows)-1);
+  let ymax = Math.ceil(Math.max(...highs)+1);
+  if (ymax-ymin < 5) ymax = ymin+5;
+
+  const x = i => m.l + i/(valid.length-1)*pw;
+  const y = v => m.t + (ymax-v)/(ymax-ymin)*ph;
+
+  svg.appendChild(svgEl("rect",{x:m.l,y:m.t,width:pw,height:ph,fill:"#fff"}));
+
+  const yStep = (ymax-ymin <= 12) ? 2 : 5;
+  for (let v=Math.ceil(ymin/yStep)*yStep; v<=ymax; v+=yStep) {
+    svg.appendChild(svgEl("line",{x1:m.l,y1:y(v),x2:W-m.r,y2:y(v),stroke:"#dce5eb","stroke-width":1}));
+    const tx=svgEl("text",{x:m.l-10,y:y(v)+4,"text-anchor":"end",fill:"#607080","font-size":13});
+    tx.textContent=v+" °C"; svg.appendChild(tx);
+  }
+
+  let lastDay = "";
+  valid.forEach((d,i)=>{
+    const dayKey=d.t.toISOString().slice(0,10);
+    if (dayKey !== lastDay) {
+      svg.appendChild(svgEl("line",{x1:x(i),y1:m.t,x2:x(i),y2:H-m.b,stroke:"#cbd7df","stroke-width":1}));
+      const tx=svgEl("text",{x:x(i)+5,y:H-m.b+25,fill:"#607080","font-size":12});
+      tx.textContent=d.t.toLocaleDateString("de-DE",{weekday:"short",day:"2-digit",month:"2-digit"});
+      svg.appendChild(tx);
+      lastDay=dayKey;
+    }
+  });
+
+  const lower95=valid.map((d,i)=>[x(i),y(d.mean-1.96*d.spread)]);
+  const upper95=valid.map((d,i)=>[x(i),y(d.mean+1.96*d.spread)]);
+  const lower68=valid.map((d,i)=>[x(i),y(d.mean-d.spread)]);
+  const upper68=valid.map((d,i)=>[x(i),y(d.mean+d.spread)]);
+  const meanPts=valid.map((d,i)=>[x(i),y(d.mean)]);
+
+  svg.appendChild(svgEl("path",{d:bandPath(upper95,lower95),fill:"rgba(23,105,170,.12)",stroke:"none"}));
+  svg.appendChild(svgEl("path",{d:bandPath(upper68,lower68),fill:"rgba(23,105,170,.28)",stroke:"none"}));
+  svg.appendChild(svgEl("path",{d:pathFrom(meanPts),fill:"none",stroke:"#165b91","stroke-width":3,"stroke-linejoin":"round"}));
+
+  svg.appendChild(svgEl("line",{x1:m.l,y1:H-m.b,x2:W-m.r,y2:H-m.b,stroke:"#71808e","stroke-width":1}));
+  svg.appendChild(svgEl("line",{x1:m.l,y1:m.t,x2:m.l,y2:H-m.b,stroke:"#71808e","stroke-width":1}));
+
+  const title=svgEl("text",{x:m.l,y:25,fill:"#17212b","font-size":18,"font-weight":700});
+  title.textContent="Temperaturprognose mit Ensemble-Streuung";
+  svg.appendChild(title);
+
+  const overlay=svgEl("rect",{x:m.l,y:m.t,width:pw,height:ph,fill:"transparent"});
+  const cross=svgEl("line",{y1:m.t,y2:H-m.b,stroke:"#5d6b78","stroke-width":1,"stroke-dasharray":"4 4",visibility:"hidden"});
+  const dot=svgEl("circle",{r:5,fill:"#165b91",stroke:"#fff","stroke-width":2,visibility:"hidden"});
+  const tip=svgEl("g",{visibility:"hidden"});
+  const tipBg=svgEl("rect",{rx:7,fill:"#17212b",opacity:.94});
+  const tipText=svgEl("text",{fill:"#fff","font-size":13});
+  tip.append(tipBg,tipText);
+  svg.append(cross,dot,tip,overlay);
+
+  function showTip(clientX) {
+    const rect=svg.getBoundingClientRect();
+    const sx=(clientX-rect.left)/rect.width*W;
+    let idx=Math.round((sx-m.l)/pw*(valid.length-1));
+    idx=Math.max(0,Math.min(valid.length-1,idx));
+    const d=valid[idx], px=x(idx), py=y(d.mean);
+    cross.setAttribute("x1",px); cross.setAttribute("x2",px); cross.setAttribute("visibility","visible");
+    dot.setAttribute("cx",px); dot.setAttribute("cy",py); dot.setAttribute("visibility","visible");
+
+    tipText.replaceChildren();
+    const lines=[
+      d.t.toLocaleString("de-DE",{weekday:"short",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}),
+      `Mittel: ${d.mean.toFixed(1)} °C`,
+      `Streuung: ${d.spread.toFixed(2)} K`
+    ];
+    lines.forEach((s,j)=>{
+      const t=svgEl("tspan",{x:0,dy:j===0?0:18});
+      t.textContent=s; tipText.appendChild(t);
+    });
+    const boxW=190, boxH=61;
+    let tx=px+12; if(tx+boxW>W-m.r) tx=px-boxW-12;
+    let ty=Math.max(m.t+8,py-boxH-12);
+    tip.setAttribute("transform",`translate(${tx},${ty})`);
+    tipBg.setAttribute("x",-8); tipBg.setAttribute("y",-17);
+    tipBg.setAttribute("width",boxW); tipBg.setAttribute("height",boxH);
+    tip.setAttribute("visibility","visible");
+  }
+
+  overlay.addEventListener("mousemove",e=>showTip(e.clientX));
+  overlay.addEventListener("touchmove",e=>{ if(e.touches[0]) showTip(e.touches[0].clientX); },{passive:true});
+  overlay.addEventListener("mouseleave",()=>{
+    cross.setAttribute("visibility","hidden"); dot.setAttribute("visibility","hidden"); tip.setAttribute("visibility","hidden");
+  });
+}
+
+async function loadData() {
+  loadBtn.disabled=true;
+  setStatus("Daten werden von Open-Meteo geladen …");
+  try {
+    const response=await fetch(apiUrl(),{cache:"no-store"});
+    if(!response.ok) {
+      let reason="";
+      try { reason=(await response.json()).reason || ""; } catch {}
+      throw new Error(`Open-Meteo: HTTP ${response.status}${reason ? " – "+reason : ""}`);
+    }
+    const data=await response.json();
+    if(!data.hourly?.time || !data.hourly?.temperature_2m || !data.hourly?.temperature_2m_spread)
+      throw new Error("Die API-Antwort enthält nicht die erwarteten Daten.");
+
+    drawChart(data.hourly.time,data.hourly.temperature_2m,data.hourly.temperature_2m_spread);
+    setStatus(`Standort: ${data.latitude.toFixed(3)}, ${data.longitude.toFixed(3)} · Höhe: ${Math.round(data.elevation)} m · Zeitzone: ${data.timezone}`);
+  } catch(err) {
+    console.error(err);
+    setStatus("Fehler: "+err.message, true);
+    $("chart").replaceChildren();
+  } finally {
+    loadBtn.disabled=false;
+  }
+}
+
+function useCurrentLocation() {
+  if(!navigator.geolocation) {
+    setStatus("Dieser Browser unterstützt keine Standortermittlung.",true);
+    return;
+  }
+  locationBtn.disabled=true;
+  setStatus("Standort wird ermittelt … Bitte Standortzugriff erlauben.");
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      $("lat").value=pos.coords.latitude.toFixed(4);
+      $("lon").value=pos.coords.longitude.toFixed(4);
+      setStatus(`Standort übernommen (Genauigkeit etwa ${Math.round(pos.coords.accuracy)} m). Lade Meteogramm …`);
+      locationBtn.disabled=false;
+      loadData();
+    },
+    err=>{
+      const messages={
+        1:"Standortzugriff wurde verweigert.",
+        2:"Der Standort konnte nicht ermittelt werden.",
+        3:"Die Standortermittlung dauerte zu lange."
+      };
+      setStatus(messages[err.code] || "Fehler bei der Standortermittlung.",true);
+      locationBtn.disabled=false;
+    },
+    {enableHighAccuracy:true,timeout:15000,maximumAge:300000}
+  );
+}
+
+loadBtn.addEventListener("click",loadData);
+locationBtn.addEventListener("click",useCurrentLocation);
+window.addEventListener("DOMContentLoaded",loadData);
+</script>
+</body>
+</html>
