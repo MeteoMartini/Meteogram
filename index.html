@@ -555,12 +555,11 @@ svg{
   <div id="updated" class="updated"></div>
 
   <div class="footnote">
-    Der hellrote Korridor zeigt ausschließlich die Modellspanne der
-    Tageshöchsttemperaturen. Der hellblaue Korridor zeigt die Modellspanne der
-    Tagestiefsttemperaturen. Die Tages- und Nachtpiktogramme werden aus den
-    stündlichen Best-Match-Wettercodes abgeleitet. Die Niederschlags-Fehlerbalken
-    zeigen die Spanne der geladenen Modelle. „Modellkonsistenz“ ist ein eigener
-    Orientierungswert und keine veröffentlichte Trefferquote.
+    Das Tagessymbol wird ausschließlich aus den tatsächlichen Tageslichtstunden
+    mit is_day = 1 bestimmt. Das Nachtsymbol wird ausschließlich aus den
+    tatsächlichen Nachtstunden mit is_day = 0 bestimmt. Der hellrote Korridor
+    zeigt die Modellspanne der Tageshöchsttemperaturen. Der hellblaue Korridor
+    zeigt die Modellspanne der Tagestiefsttemperaturen.
   </div>
 
 </main>
@@ -765,16 +764,36 @@ function severity(code){
   return 0;
 }
 
+/*
+ * Bestimmt den repräsentativen Wettercode einer Zeitspanne.
+ *
+ * Zuerst wird der am häufigsten vorkommende Wettercode gewählt.
+ * Bei Gleichstand gewinnt der meteorologisch markantere Code.
+ */
 function representativeCode(points){
   if(!points.length){
     return -1;
   }
 
-  return points.reduce((best,current)=>{
-    return severity(current.code)>severity(best.code)
-      ? current
-      : best;
-  }).code;
+  const counts=new Map();
+
+  points.forEach(point=>{
+    counts.set(
+      point.code,
+      (counts.get(point.code)||0)+1
+    );
+  });
+
+  return [...counts.entries()]
+    .sort((a,b)=>{
+      const frequencyDifference=b[1]-a[1];
+
+      if(frequencyDifference!==0){
+        return frequencyDifference;
+      }
+
+      return severity(b[0])-severity(a[0]);
+    })[0][0];
 }
 
 function fmtCoord(value,positive,negative){
@@ -790,8 +809,15 @@ function colorForConfidence(value){
   return"#f23a3a";
 }
 
+/*
+ * Die Trennung erfolgt ausschließlich über den von Open-Meteo
+ * gelieferten Parameter is_day:
+ *
+ * is_day = 1: tatsächliche Tageslichtstunden
+ * is_day = 0: tatsächliche Nachtstunden
+ */
 function hourlyIconsByDay(mainData){
-  const result=new Map();
+  const grouped=new Map();
 
   const times=mainData.hourly?.time||[];
   const codes=mainData.hourly?.weather_code||[];
@@ -799,56 +825,40 @@ function hourlyIconsByDay(mainData){
 
   times.forEach((time,index)=>{
     const dateKey=time.slice(0,10);
+    const code=Number.isFinite(codes[index])
+      ? codes[index]
+      : -1;
 
-    if(!result.has(dateKey)){
-      result.set(dateKey,{
-        day:[],
+    if(!grouped.has(dateKey)){
+      grouped.set(dateKey,{
+        daylight:[],
         night:[]
       });
     }
 
-    const point={
-      code:Number.isFinite(codes[index])
-        ? codes[index]
-        : -1,
-
-      hour:Number(time.slice(11,13))
-    };
-
     if(Number(isDayValues[index])===1){
-      result.get(dateKey).day.push(point);
+      grouped.get(dateKey).daylight.push({
+        code,
+        time
+      });
     }else{
-      result.get(dateKey).night.push(point);
+      grouped.get(dateKey).night.push({
+        code,
+        time
+      });
     }
   });
 
-  const icons=new Map();
+  const result=new Map();
 
-  result.forEach((value,key)=>{
-    const coreDay=value.day.filter(point=>{
-      return point.hour>=10&&point.hour<=17;
-    });
-
-    const coreNight=value.night.filter(point=>{
-      return point.hour<=5||point.hour>=22;
-    });
-
-    icons.set(key,{
-      dayCode:representativeCode(
-        coreDay.length
-          ? coreDay
-          : value.day
-      ),
-
-      nightCode:representativeCode(
-        coreNight.length
-          ? coreNight
-          : value.night
-      )
+  grouped.forEach((periods,dateKey)=>{
+    result.set(dateKey,{
+      dayCode:representativeCode(periods.daylight),
+      nightCode:representativeCode(periods.night)
     });
   });
 
-  return icons;
+  return result;
 }
 
 function merge(results){
@@ -1213,9 +1223,6 @@ function drawTemp(days){
     y(day.lowUncertaintyLow)
   ]);
 
-  /*
-   * Hellroter Unsicherheitsbereich nur für Tageshöchstwerte.
-   */
   svg.appendChild(
     svgEl("path",{
       d:band(highUpper,highLower),
@@ -1225,9 +1232,6 @@ function drawTemp(days){
     })
   );
 
-  /*
-   * Hellblauer Unsicherheitsbereich für Tagestiefstwerte.
-   */
   svg.appendChild(
     svgEl("path",{
       d:band(lowUpper,lowLower),
