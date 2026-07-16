@@ -13,7 +13,7 @@
   --paper:#fff;
   --background:#f2f2f2;
   --text:#111;
-  --muted:#727272;
+  --muted:#707070;
   --grid:#b8b8b8;
 
   --red:#ed1111;
@@ -25,14 +25,17 @@
   --blue-outer:rgba(66,129,225,.14);
 
   --rain:#1558e8;
-  --cyan:#28bfe3;
+  --rain-inner:rgba(38,112,235,.36);
+  --rain-outer:rgba(38,112,235,.15);
+  --rain-range:#777;
+  --cyan:#27bfe2;
 
   --day-width:100px;
   --axis-width:58px;
   --right-space:24px;
 
   --temp-height:350px;
-  --rain-height:340px;
+  --rain-height:360px;
 }
 
 *{
@@ -260,7 +263,7 @@ button:disabled{
   align-items:center;
   justify-content:center;
   gap:1px;
-  min-width:46px;
+  min-width:48px;
 }
 
 .day-icon{
@@ -281,10 +284,10 @@ button:disabled{
 
 .night-icon-wrap{
   display:flex;
+  min-width:23px;
   flex-direction:column;
   align-items:center;
   justify-content:flex-end;
-  min-width:23px;
 }
 
 .night-label{
@@ -295,9 +298,9 @@ button:disabled{
 }
 
 .night-icon{
-  font-size:19px;
+  font-size:18px;
   line-height:1;
-  opacity:.92;
+  opacity:.9;
 }
 
 .maximum{
@@ -438,7 +441,7 @@ svg{
     --axis-width:44px;
     --right-space:10px;
     --temp-height:290px;
-    --rain-height:285px;
+    --rain-height:300px;
   }
 
   body{
@@ -509,7 +512,7 @@ svg{
   }
 
   .night-icon{
-    font-size:16px;
+    font-size:15px;
   }
 
   .maximum,
@@ -653,7 +656,7 @@ svg{
       <svg
         id="rainChart"
         role="img"
-        aria-label="Niederschlagsdiagramm">
+        aria-label="Niederschlag mit Ensemble-Streubereichen">
       </svg>
 
       <section
@@ -670,7 +673,7 @@ svg{
         class="legend-line"
         style="border-color:#ed1111">
       </span>
-      Best-Match-Höchstwert
+      Höchsttemperatur
     </div>
 
     <div class="legend-item">
@@ -694,7 +697,7 @@ svg{
         class="legend-line"
         style="border-color:#1687ef">
       </span>
-      Best-Match-Tiefstwert
+      Tiefsttemperatur
     </div>
 
     <div class="legend-item">
@@ -707,22 +710,36 @@ svg{
 
     <div class="legend-item">
       <span
-        class="legend-box"
-        style="background:rgba(66,129,225,.14)">
+        class="legend-line"
+        style="border-color:#1558e8">
       </span>
-      äußerer Tiefstwertbereich
+      erwarteter Niederschlag
+    </div>
+
+    <div class="legend-item">
+      <span
+        class="legend-box"
+        style="background:rgba(38,112,235,.36)">
+      </span>
+      innerer Niederschlagsbereich
+    </div>
+
+    <div class="legend-item">
+      <span
+        class="legend-box"
+        style="background:rgba(38,112,235,.15)">
+      </span>
+      äußerer Niederschlagsbereich
     </div>
   </div>
 
   <div id="updated" class="updated"></div>
 
   <div class="note">
-    Seamless-Gewichtung: Kurzfristig werden ICON-D2-EPS und
-    ICON-EU-EPS besonders stark berücksichtigt. Danach übernehmen
-    ICON-EPS Global, ECMWF IFS-ENS und ECMWF AIFS-ENS schrittweise.
-    Ein zweites Tagessymbol erscheint bei einer deutlichen Wetteränderung
-    zwischen erster und zweiter Tageshälfte. Das kleinere Nachtsymbol basiert
-    ausschließlich auf tatsächlichen Nachtstunden.
+    Kurzfristig werden ICON-D2-EPS und ICON-EU-EPS besonders stark
+    berücksichtigt. Die Niederschlagsbereiche kombinieren die Streuung der
+    verfügbaren Ensembles und die Unterschiede zwischen deren Mittelwerten.
+    Die kräftigen blauen Balken zeigen die Best-Match-Niederschlagssumme.
   </div>
 
 </main>
@@ -744,10 +761,6 @@ let selectedPlace = "";
 let currentDays = null;
 let searchTimer = null;
 
-/*
- * Kurzfristige regionale Ensembles werden einzeln geladen.
- * Seamless dient zusätzlich als robuste Rückfallebene.
- */
 const ENSEMBLES = [
   {
     id:"dwd_icon_eps_ensemble_mean_d2",
@@ -778,6 +791,11 @@ const ENSEMBLES = [
     id:"ecmwf_aifs025_ensemble_mean",
     label:"ECMWF AIFS-ENS",
     family:"aifs"
+  },
+  {
+    id:"gfs025_ensemble_mean",
+    label:"GFS-ENS",
+    family:"gfs"
   }
 ];
 
@@ -798,7 +816,9 @@ function readLayout(){
     style.getPropertyValue("--right-space")
   ) || 24;
 
-  plotWidth = dayWidth * NUMBER_OF_DAYS;
+  plotWidth =
+    dayWidth * NUMBER_OF_DAYS;
+
   canvasWidth =
     axisWidth +
     plotWidth +
@@ -809,11 +829,11 @@ function chartHeights(){
   return window.innerWidth <= 700
     ? {
         temperature:290,
-        rain:285
+        rain:300
       }
     : {
         temperature:350,
-        rain:340
+        rain:360
       };
 }
 
@@ -835,6 +855,7 @@ function resizeSvg(){
 
 function setStatus(text,error=false){
   $("status").textContent = text;
+
   $("status").classList.toggle(
     "error",
     error
@@ -842,10 +863,11 @@ function setStatus(text,error=false){
 }
 
 function svgElement(name,attributes={}){
-  const element = document.createElementNS(
-    SVG_NS,
-    name
-  );
+  const element =
+    document.createElementNS(
+      SVG_NS,
+      name
+    );
 
   Object.entries(attributes).forEach(
     ([key,value]) => {
@@ -860,13 +882,11 @@ function svgElement(name,attributes={}){
 }
 
 function coordinates(){
-  const latitude = Number(
-    $("latitude").value
-  );
+  const latitude =
+    Number($("latitude").value);
 
-  const longitude = Number(
-    $("longitude").value
-  );
+  const longitude =
+    Number($("longitude").value);
 
   if(
     !Number.isFinite(latitude) ||
@@ -900,32 +920,33 @@ function forecastUrl(){
     longitude
   } = coordinates();
 
-  const parameters = new URLSearchParams({
-    latitude:String(latitude),
-    longitude:String(longitude),
+  const parameters =
+    new URLSearchParams({
+      latitude:String(latitude),
+      longitude:String(longitude),
 
-    daily:[
-      "weather_code",
-      "temperature_2m_max",
-      "temperature_2m_min",
-      "precipitation_sum",
-      "precipitation_probability_max"
-    ].join(","),
+      daily:[
+        "weather_code",
+        "temperature_2m_max",
+        "temperature_2m_min",
+        "precipitation_sum",
+        "precipitation_probability_max"
+      ].join(","),
 
-    hourly:[
-      "weather_code",
-      "is_day",
-      "precipitation_probability",
-      "precipitation",
-      "cloud_cover",
-      "visibility",
-      "wind_gusts_10m"
-    ].join(","),
+      hourly:[
+        "weather_code",
+        "is_day",
+        "precipitation_probability",
+        "precipitation",
+        "cloud_cover",
+        "visibility",
+        "wind_gusts_10m"
+      ].join(","),
 
-    timezone:"auto",
-    forecast_days:"14",
-    models:"best_match"
-  });
+      timezone:"auto",
+      forecast_days:"14",
+      models:"best_match"
+    });
 
   return (
     "https://api.open-meteo.com/v1/forecast?" +
@@ -939,19 +960,22 @@ function ensembleUrl(model){
     longitude
   } = coordinates();
 
-  const parameters = new URLSearchParams({
-    latitude:String(latitude),
-    longitude:String(longitude),
+  const parameters =
+    new URLSearchParams({
+      latitude:String(latitude),
+      longitude:String(longitude),
 
-    hourly:[
-      "temperature_2m",
-      "temperature_2m_spread"
-    ].join(","),
+      hourly:[
+        "temperature_2m",
+        "temperature_2m_spread",
+        "precipitation",
+        "precipitation_spread"
+      ].join(","),
 
-    timezone:"auto",
-    forecast_days:"14",
-    models:model
-  });
+      timezone:"auto",
+      forecast_days:"14",
+      models:model
+    });
 
   return (
     "https://ensemble-api.open-meteo.com/v1/ensemble?" +
@@ -960,12 +984,13 @@ function ensembleUrl(model){
 }
 
 function geocodingUrl(query){
-  const parameters = new URLSearchParams({
-    name:query,
-    count:"10",
-    language:"de",
-    format:"json"
-  });
+  const parameters =
+    new URLSearchParams({
+      name:query,
+      count:"10",
+      language:"de",
+      format:"json"
+    });
 
   return (
     "https://geocoding-api.open-meteo.com/v1/search?" +
@@ -1026,7 +1051,7 @@ async function loadEnsemble(definition){
     !data.hourly?.temperature_2m_spread
   ){
     throw new Error(
-      `${definition.label}: keine Ensemble-Spreads`
+      `${definition.label}: keine Ensemble-Daten`
     );
   }
 
@@ -1073,11 +1098,7 @@ function weatherIcon(code,isDay=true){
     return "🌧️";
   }
 
-  if([71,73,75,77].includes(code)){
-    return "🌨️";
-  }
-
-  if([85,86].includes(code)){
+  if([71,73,75,77,85,86].includes(code)){
     return "🌨️";
   }
 
@@ -1088,68 +1109,18 @@ function weatherIcon(code,isDay=true){
   return "❔";
 }
 
-function weatherClass(code){
-  if([95,96,99].includes(code)){
-    return "thunder";
-  }
-
-  if([71,73,75,77,85,86].includes(code)){
-    return "snow";
-  }
-
-  if([65,67,82].includes(code)){
-    return "heavy-rain";
-  }
-
-  if([61,63,66,80,81].includes(code)){
-    return "rain";
-  }
-
-  if([51,53,55,56,57].includes(code)){
-    return "drizzle";
-  }
-
-  if([45,48].includes(code)){
-    return "fog";
-  }
-
-  if(code === 3){
-    return "cloudy";
-  }
-
-  if(code === 2){
-    return "partly-cloudy";
-  }
-
-  if(code === 1){
-    return "mostly-clear";
-  }
-
-  if(code === 0){
-    return "clear";
-  }
-
-  return "unknown";
-}
-
 function weatherSeverity(code){
-  const category = weatherClass(code);
+  if([95,96,99].includes(code))return 9;
+  if([82,86,65,67,75].includes(code))return 8;
+  if([80,81,85,61,63,66,71,73].includes(code))return 7;
+  if([51,53,55,56,57,77].includes(code))return 6;
+  if([45,48].includes(code))return 5;
+  if(code === 3)return 4;
+  if(code === 2)return 3;
+  if(code === 1)return 2;
+  if(code === 0)return 1;
 
-  const scores = {
-    "unknown":0,
-    "clear":1,
-    "mostly-clear":2,
-    "partly-cloudy":3,
-    "cloudy":4,
-    "fog":5,
-    "drizzle":6,
-    "rain":7,
-    "heavy-rain":8,
-    "snow":8,
-    "thunder":9
-  };
-
-  return scores[category] || 0;
+  return 0;
 }
 
 function representativeWeatherCode(points){
@@ -1172,28 +1143,19 @@ function representativeWeatherCode(points){
         (point.probability || 0) / 70
       );
 
-    const gustBoost =
-      Math.min(
-        1,
-        Math.max(
-          0,
-          ((point.gust || 0) - 35) / 35
-        )
-      );
-
-    const value =
+    const score =
       weatherSeverity(point.code) +
       precipitationBoost +
-      probabilityBoost +
-      gustBoost;
+      probabilityBoost;
 
-    const existing = scores.get(point.code) || {
-      count:0,
-      score:0
-    };
+    const existing =
+      scores.get(point.code) || {
+        count:0,
+        score:0
+      };
 
     existing.count += 1;
-    existing.score += value;
+    existing.score += score;
 
     scores.set(
       point.code,
@@ -1223,42 +1185,36 @@ function significantWeatherChange(
 ){
   if(
     firstCode < 0 ||
-    secondCode < 0
+    secondCode < 0 ||
+    firstCode === secondCode
   ){
     return false;
   }
 
-  const firstClass =
-    weatherClass(firstCode);
+  const severityDifference =
+    Math.abs(
+      weatherSeverity(firstCode) -
+      weatherSeverity(secondCode)
+    );
 
-  const secondClass =
-    weatherClass(secondCode);
-
-  if(firstClass === secondClass){
-    return false;
-  }
-
-  const severityDifference = Math.abs(
-    weatherSeverity(firstCode) -
-    weatherSeverity(secondCode)
-  );
-
-  const wetClasses = new Set([
-    "drizzle",
-    "rain",
-    "heavy-rain",
-    "snow",
-    "thunder"
-  ]);
-
-  if(
-    wetClasses.has(firstClass) !==
-    wetClasses.has(secondClass)
-  ){
+  if(severityDifference >= 2){
     return true;
   }
 
-  if(severityDifference >= 2){
+  const isWet = code => {
+    return [
+      51,53,55,56,57,
+      61,63,65,66,67,
+      71,73,75,77,
+      80,81,82,85,86,
+      95,96,99
+    ].includes(code);
+  };
+
+  if(
+    isWet(firstCode) !==
+    isWet(secondCode)
+  ){
     return true;
   }
 
@@ -1269,23 +1225,22 @@ function significantWeatherChange(
 
     return points.reduce(
       (sum,point) =>
-        sum + (point.probability || 0),
+        sum +
+        (point.probability || 0),
       0
     ) / points.length;
   };
 
-  const probabilityDifference = Math.abs(
+  return Math.abs(
     averageProbability(firstPoints) -
     averageProbability(secondPoints)
-  );
-
-  return probabilityDifference >= 25;
+  ) >= 25;
 }
 
 function weatherIconsByDay(forecast){
   const grouped = new Map();
-
   const hourly = forecast.hourly || {};
+
   const times = hourly.time || [];
   const codes = hourly.weather_code || [];
   const daylight = hourly.is_day || [];
@@ -1296,20 +1251,8 @@ function weatherIconsByDay(forecast){
   const precipitation =
     hourly.precipitation || [];
 
-  const cloudCover =
-    hourly.cloud_cover || [];
-
-  const visibility =
-    hourly.visibility || [];
-
-  const gusts =
-    hourly.wind_gusts_10m || [];
-
   times.forEach((time,index) => {
     const date = time.slice(0,10);
-    const hour = Number(
-      time.slice(11,13)
-    );
 
     if(!grouped.has(date)){
       grouped.set(date,{
@@ -1323,8 +1266,6 @@ function weatherIconsByDay(forecast){
         ? codes[index]
         : -1,
 
-      hour,
-
       probability:Number.isFinite(
         probabilities[index]
       )
@@ -1335,24 +1276,6 @@ function weatherIconsByDay(forecast){
         precipitation[index]
       )
         ? precipitation[index]
-        : 0,
-
-      cloud:Number.isFinite(
-        cloudCover[index]
-      )
-        ? cloudCover[index]
-        : 0,
-
-      visibility:Number.isFinite(
-        visibility[index]
-      )
-        ? visibility[index]
-        : null,
-
-      gust:Number.isFinite(
-        gusts[index]
-      )
-        ? gusts[index]
         : 0
     };
 
@@ -1370,55 +1293,51 @@ function weatherIconsByDay(forecast){
   const result = new Map();
 
   grouped.forEach((period,date) => {
-    const daylightHours =
-      period.daylight.slice();
+    const midpoint = Math.ceil(
+      period.daylight.length / 2
+    );
 
-    let firstHalf = [];
-    let secondHalf = [];
+    const firstHalf =
+      period.daylight.slice(
+        0,
+        midpoint
+      );
 
-    if(daylightHours.length){
-      const midpoint =
-        Math.ceil(daylightHours.length / 2);
-
-      firstHalf =
-        daylightHours.slice(0,midpoint);
-
-      secondHalf =
-        daylightHours.slice(midpoint);
-    }
+    const secondHalf =
+      period.daylight.slice(
+        midpoint
+      );
 
     const firstDayCode =
       representativeWeatherCode(
         firstHalf.length
           ? firstHalf
-          : daylightHours
+          : period.daylight
       );
 
     const secondDayCode =
       representativeWeatherCode(
         secondHalf.length
           ? secondHalf
-          : daylightHours
-      );
-
-    const showSecondDayIcon =
-      significantWeatherChange(
-        firstDayCode,
-        secondDayCode,
-        firstHalf,
-        secondHalf
-      );
-
-    const nightCode =
-      representativeWeatherCode(
-        period.night
+          : period.daylight
       );
 
     result.set(date,{
       firstDayCode,
       secondDayCode,
-      showSecondDayIcon,
-      nightCode
+
+      showSecondDayIcon:
+        significantWeatherChange(
+          firstDayCode,
+          secondDayCode,
+          firstHalf,
+          secondHalf
+        ),
+
+      nightCode:
+        representativeWeatherCode(
+          period.night
+        )
     });
   });
 
@@ -1429,16 +1348,22 @@ function dailyEnsembleData(ensemble){
   const grouped = new Map();
   const hourly = ensemble.data.hourly;
 
+  const precipitationValues =
+    hourly.precipitation || [];
+
+  const precipitationSpreads =
+    hourly.precipitation_spread || [];
+
   hourly.time.forEach((time,index) => {
-    const mean =
+    const temperatureMean =
       hourly.temperature_2m[index];
 
-    const spread =
+    const temperatureSpread =
       hourly.temperature_2m_spread[index];
 
     if(
-      !Number.isFinite(mean) ||
-      !Number.isFinite(spread)
+      !Number.isFinite(temperatureMean) ||
+      !Number.isFinite(temperatureSpread)
     ){
       return;
     }
@@ -1450,8 +1375,28 @@ function dailyEnsembleData(ensemble){
     }
 
     grouped.get(date).push({
-      mean,
-      spread
+      temperatureMean,
+      temperatureSpread,
+
+      precipitationMean:
+        Number.isFinite(
+          precipitationValues[index]
+        )
+          ? Math.max(
+              0,
+              precipitationValues[index]
+            )
+          : 0,
+
+      precipitationSpread:
+        Number.isFinite(
+          precipitationSpreads[index]
+        )
+          ? Math.max(
+              0,
+              precipitationSpreads[index]
+            )
+          : 0
     });
   });
 
@@ -1464,90 +1409,122 @@ function dailyEnsembleData(ensemble){
 
     const maximum = hours.reduce(
       (best,current) =>
-        current.mean > best.mean
+        current.temperatureMean >
+        best.temperatureMean
           ? current
           : best
     );
 
     const minimum = hours.reduce(
       (best,current) =>
-        current.mean < best.mean
+        current.temperatureMean <
+        best.temperatureMean
           ? current
           : best
     );
 
+    const precipitationMean =
+      hours.reduce(
+        (sum,hour) =>
+          sum +
+          hour.precipitationMean,
+        0
+      );
+
+    /*
+     * Stundenstreuungen werden quadratisch kombiniert.
+     * Ein Korrekturfaktor verhindert eine zu enge Tagesspanne.
+     */
+    const precipitationVariance =
+      hours.reduce(
+        (sum,hour) =>
+          sum +
+          Math.pow(
+            hour.precipitationSpread,
+            2
+          ),
+        0
+      );
+
+    const precipitationSpread =
+      Math.sqrt(
+        precipitationVariance
+      ) * 1.35;
+
     daily.set(date,{
-      maximumMean:maximum.mean,
-      maximumSpread:maximum.spread,
+      maximumMean:
+        maximum.temperatureMean,
 
-      minimumMean:minimum.mean,
-      minimumSpread:minimum.spread,
+      maximumSpread:
+        maximum.temperatureSpread,
 
-      family:ensemble.definition.family,
-      label:ensemble.definition.label
+      minimumMean:
+        minimum.temperatureMean,
+
+      minimumSpread:
+        minimum.temperatureSpread,
+
+      precipitationMean,
+      precipitationSpread,
+
+      family:
+        ensemble.definition.family,
+
+      label:
+        ensemble.definition.label
     });
   });
 
   return daily;
 }
 
-/*
- * Horizontabhängige Seamless-Gewichtung:
- *
- * ICON-D2-EPS:
- * höchste Gewichtung in den ersten 48 Stunden.
- *
- * ICON-EU-EPS:
- * hohe Gewichtung bis etwa Tag 5.
- *
- * ICON Global / ECMWF:
- * zunehmende Gewichtung für mittlere und längere Fristen.
- *
- * ICON Seamless:
- * dient als zusätzliche Übergangs- und Rückfallebene.
- */
 function modelWeight(family,dayIndex){
   switch(family){
     case "d2":
-      if(dayIndex === 0)return 8.0;
-      if(dayIndex === 1)return 7.0;
+      if(dayIndex === 0)return 8;
+      if(dayIndex === 1)return 7;
       if(dayIndex === 2)return 1.5;
       return 0;
 
     case "eu":
       if(dayIndex <= 1)return 4.5;
-      if(dayIndex === 2)return 6.0;
+      if(dayIndex === 2)return 6;
       if(dayIndex === 3)return 5.5;
       if(dayIndex === 4)return 4.5;
-      if(dayIndex === 5)return 2.0;
+      if(dayIndex === 5)return 2;
       return 0;
 
     case "seamless":
       if(dayIndex <= 1)return 2.5;
-      if(dayIndex <= 4)return 3.0;
-      if(dayIndex <= 6)return 2.0;
+      if(dayIndex <= 4)return 3;
+      if(dayIndex <= 6)return 2;
       return .5;
 
     case "global":
-      if(dayIndex <= 1)return 1.0;
-      if(dayIndex <= 3)return 2.0;
+      if(dayIndex <= 1)return 1;
+      if(dayIndex <= 3)return 2;
       if(dayIndex <= 5)return 3.5;
-      if(dayIndex <= 7)return 4.0;
-      return 1.0;
+      if(dayIndex <= 7)return 4;
+      return 1;
 
     case "ecmwf":
       if(dayIndex <= 1)return 1.2;
       if(dayIndex <= 3)return 2.2;
       if(dayIndex <= 5)return 3.7;
-      if(dayIndex <= 9)return 5.0;
+      if(dayIndex <= 9)return 5;
       return 5.5;
 
     case "aifs":
       if(dayIndex <= 1)return .8;
       if(dayIndex <= 3)return 1.6;
       if(dayIndex <= 5)return 2.7;
-      if(dayIndex <= 9)return 4.0;
+      if(dayIndex <= 9)return 4;
       return 4.8;
+
+    case "gfs":
+      if(dayIndex <= 3)return 1;
+      if(dayIndex <= 6)return 2;
+      return 3;
 
     default:
       return 1;
@@ -1582,53 +1559,52 @@ function weightedEnsemble(
     return null;
   }
 
-  const weightSum = valid.reduce(
-    (sum,item) =>
-      sum + item.weight,
-    0
-  );
-
-  const mean = valid.reduce(
-    (sum,item) =>
-      sum +
-      item.entry[meanKey] *
-      item.weight,
-    0
-  ) / weightSum;
-
-  /*
-   * Gesamtvarianz:
-   * interne EPS-Streuung plus Unterschiede
-   * zwischen den jeweiligen Ensemble-Mitteln.
-   */
-  const variance = valid.reduce(
-    (sum,item) => {
-      const internalVariance =
-        item.entry[spreadKey] *
-        item.entry[spreadKey];
-
-      const modelDifference =
-        item.entry[meanKey] -
-        mean;
-
-      const modelVariance =
-        modelDifference *
-        modelDifference;
-
-      return (
+  const weightSum =
+    valid.reduce(
+      (sum,item) =>
         sum +
-        item.weight *
-        (
-          internalVariance +
-          modelVariance
-        )
-      );
-    },
-    0
-  ) / weightSum;
+        item.weight,
+      0
+    );
+
+  const mean =
+    valid.reduce(
+      (sum,item) =>
+        sum +
+        item.entry[meanKey] *
+        item.weight,
+      0
+    ) / weightSum;
+
+  const variance =
+    valid.reduce(
+      (sum,item) => {
+        const internalVariance =
+          Math.pow(
+            item.entry[spreadKey],
+            2
+          );
+
+        const modelDifference =
+          item.entry[meanKey] -
+          mean;
+
+        return (
+          sum +
+          item.weight *
+          (
+            internalVariance +
+            modelDifference *
+            modelDifference
+          )
+        );
+      },
+      0
+    ) / weightSum;
 
   return {
     mean,
+
     spread:Math.sqrt(
       Math.max(
         variance,
@@ -1639,7 +1615,8 @@ function weightedEnsemble(
     modelCount:valid.length,
 
     labels:valid.map(
-      item => item.entry.label
+      item =>
+        item.entry.label
     )
   };
 }
@@ -1660,30 +1637,50 @@ function mergeData(
 
   return daily.time.map(
     (date,index) => {
-      const ensembleEntries =
+      const entries =
         ensembleMaps
           .map(map => map.get(date))
           .filter(Boolean);
 
-      const high = weightedEnsemble(
-        ensembleEntries,
-        "maximumMean",
-        "maximumSpread",
-        index
-      );
+      const high =
+        weightedEnsemble(
+          entries,
+          "maximumMean",
+          "maximumSpread",
+          index
+        );
 
-      const low = weightedEnsemble(
-        ensembleEntries,
-        "minimumMean",
-        "minimumSpread",
-        index
-      );
+      const low =
+        weightedEnsemble(
+          entries,
+          "minimumMean",
+          "minimumSpread",
+          index
+        );
+
+      const precipitation =
+        weightedEnsemble(
+          entries,
+          "precipitationMean",
+          "precipitationSpread",
+          index
+        );
 
       const mainMaximum =
         daily.temperature_2m_max[index];
 
       const mainMinimum =
         daily.temperature_2m_min[index];
+
+      const mainRain =
+        Number.isFinite(
+          daily.precipitation_sum?.[index]
+        )
+          ? Math.max(
+              0,
+              daily.precipitation_sum[index]
+            )
+          : 0;
 
       const maximumMean =
         high?.mean ??
@@ -1703,6 +1700,16 @@ function mergeData(
         Math.max(
           .15,
           low?.spread ?? .15
+        );
+
+      const rainMean =
+        precipitation?.mean ??
+        mainRain;
+
+      const rainSpread =
+        Math.max(
+          .05,
+          precipitation?.spread ?? .05
         );
 
       const dominantSpread =
@@ -1746,6 +1753,7 @@ function mergeData(
 
       return {
         date,
+
         dateObject:new Date(
           date + "T12:00:00"
         ),
@@ -1775,11 +1783,13 @@ function mergeData(
 
         highOuterLow:
           maximumMean -
-          1.96 * maximumSpread,
+          1.96 *
+          maximumSpread,
 
         highOuterHigh:
           maximumMean +
-          1.96 * maximumSpread,
+          1.96 *
+          maximumSpread,
 
         lowInnerLow:
           minimumMean -
@@ -1791,34 +1801,72 @@ function mergeData(
 
         lowOuterLow:
           minimumMean -
-          1.96 * minimumSpread,
+          1.96 *
+          minimumSpread,
 
         lowOuterHigh:
           minimumMean +
-          1.96 * minimumSpread,
+          1.96 *
+          minimumSpread,
 
-        rain:Number.isFinite(
-          daily.precipitation_sum?.[index]
-        )
-          ? daily.precipitation_sum[index]
-          : 0,
+        rain:mainRain,
 
-        rainProbability:Number.isFinite(
-          daily.precipitation_probability_max?.[index]
-        )
-          ? daily.precipitation_probability_max[index]
-          : 0,
+        rainMean,
+
+        rainInnerLow:
+          Math.max(
+            0,
+            rainMean -
+            rainSpread
+          ),
+
+        rainInnerHigh:
+          Math.max(
+            0,
+            rainMean +
+            rainSpread
+          ),
+
+        rainOuterLow:
+          Math.max(
+            0,
+            rainMean -
+            1.96 *
+            rainSpread
+          ),
+
+        rainOuterHigh:
+          Math.max(
+            0,
+            rainMean +
+            1.96 *
+            rainSpread
+          ),
+
+        rainProbability:
+          Number.isFinite(
+            daily
+              .precipitation_probability_max
+              ?.[index]
+          )
+            ? daily
+                .precipitation_probability_max
+                [index]
+            : 0,
 
         confidence,
 
-        ensembleCount:Math.max(
-          high?.modelCount ?? 0,
-          low?.modelCount ?? 0
-        ),
+        ensembleCount:
+          Math.max(
+            high?.modelCount ?? 0,
+            low?.modelCount ?? 0,
+            precipitation?.modelCount ?? 0
+          ),
 
         ensembleLabels:[
           ...(high?.labels || []),
-          ...(low?.labels || [])
+          ...(low?.labels || []),
+          ...(precipitation?.labels || [])
         ].filter(
           (value,index,array) =>
             array.indexOf(value) === index
@@ -1895,14 +1943,16 @@ function renderDays(days){
         }
       );
 
-    const secondIcon = day.showSecondDayIcon
-      ? `
-        <span class="change-arrow">›</span>
-        <span class="day-icon secondary-icon">
-          ${weatherIcon(day.secondDayCode,true)}
-        </span>
-      `
-      : "";
+    const secondIcon =
+      day.showSecondDayIcon
+        ? `
+          <span class="change-arrow">›</span>
+
+          <span class="day-icon secondary-icon">
+            ${weatherIcon(day.secondDayCode,true)}
+          </span>
+        `
+        : "";
 
     element.innerHTML = `
       <div class="weekday">${weekday}</div>
@@ -1935,15 +1985,6 @@ function renderDays(days){
       </div>
     `;
 
-    const changeText =
-      day.showSecondDayIcon
-        ? "Wetteränderung im Tagesverlauf"
-        : "weitgehend einheitlicher Tagesverlauf";
-
-    element.title =
-      `${changeText}; ` +
-      `${day.ensembleCount} Ensembleprodukte berücksichtigt`;
-
     container.appendChild(element);
   });
 }
@@ -1960,9 +2001,7 @@ function renderConfidence(days){
       "confidence-cell";
 
     element.title =
-      day.ensembleLabels.length
-        ? day.ensembleLabels.join(", ")
-        : "Keine Ensembleprodukte verfügbar";
+      day.ensembleLabels.join(", ");
 
     element.innerHTML = `
       <div class="confidence-track">
@@ -2046,8 +2085,11 @@ function drawTemperature(days){
 
   const top = 18;
   const bottom = 38;
+
   const chartHeight =
-    height - top - bottom;
+    height -
+    top -
+    bottom;
 
   const values = [
     ...days.map(
@@ -2075,7 +2117,8 @@ function drawTemperature(days){
     );
 
   if(maximum - minimum < 10){
-    maximum = minimum + 10;
+    maximum =
+      minimum + 10;
   }
 
   const y = value => {
@@ -2105,7 +2148,8 @@ function drawTemperature(days){
 
   for(
     let value =
-      Math.ceil(minimum / step) * step;
+      Math.ceil(minimum / step) *
+      step;
 
     value <= maximum;
 
@@ -2288,7 +2332,9 @@ function drawTemperature(days){
 function drawRain(days){
   resizeSvg();
 
-  const svg = $("rainChart");
+  const svg =
+    $("rainChart");
+
   svg.replaceChildren();
 
   const height =
@@ -2298,13 +2344,19 @@ function drawRain(days){
   const bottom = 46;
 
   const chartHeight =
-    height - top - bottom;
+    height -
+    top -
+    bottom;
 
   const maximumRain =
     Math.max(
       1,
       ...days.map(
-        day => day.rain
+        day =>
+          Math.max(
+            day.rain,
+            day.rainOuterHigh
+          )
       )
     );
 
@@ -2315,9 +2367,11 @@ function drawRain(days){
         ? 5
         : maximumRain <= 10
           ? 10
-          : Math.ceil(
-              maximumRain / 5
-            ) * 5;
+          : maximumRain <= 20
+            ? 20
+            : Math.ceil(
+                maximumRain / 10
+              ) * 10;
 
   const y = value => {
     return (
@@ -2342,7 +2396,11 @@ function drawRain(days){
   const step =
     axisMaximum <= 5
       ? 1
-      : 2;
+      : axisMaximum <= 10
+        ? 2
+        : axisMaximum <= 20
+          ? 5
+          : 10;
 
   for(
     let value = 0;
@@ -2390,19 +2448,107 @@ function drawRain(days){
     );
   }
 
-  const barWidth =
-    dayWidth * .62;
+  const outerWidth =
+    dayWidth * .76;
+
+  const innerWidth =
+    dayWidth * .58;
+
+  const rainBarWidth =
+    dayWidth * .34;
 
   days.forEach((day,index) => {
     const x =
       dayCenter(index);
 
+    /*
+     * Äußerer Ensemblebereich.
+     */
+    if(day.rainOuterHigh > 0){
+      svg.appendChild(
+        svgElement("rect",{
+          x:x - outerWidth / 2,
+          y:y(day.rainOuterHigh),
+          width:outerWidth,
+          height:
+            y(day.rainOuterLow) -
+            y(day.rainOuterHigh),
+          fill:"rgba(38,112,235,.15)",
+          stroke:"none"
+        })
+      );
+    }
+
+    /*
+     * Innerer Ensemblebereich.
+     */
+    if(day.rainInnerHigh > 0){
+      svg.appendChild(
+        svgElement("rect",{
+          x:x - innerWidth / 2,
+          y:y(day.rainInnerHigh),
+          width:innerWidth,
+          height:
+            y(day.rainInnerLow) -
+            y(day.rainInnerHigh),
+          fill:"rgba(38,112,235,.36)",
+          stroke:"rgba(35,86,175,.5)",
+          "stroke-width":1
+        })
+      );
+    }
+
+    /*
+     * Gesamte Modellspanne als Fehlerbalken.
+     */
+    const outerTop =
+      y(day.rainOuterHigh);
+
+    const outerBottom =
+      y(day.rainOuterLow);
+
+    svg.appendChild(
+      svgElement("line",{
+        x1:x,
+        y1:outerTop,
+        x2:x,
+        y2:outerBottom,
+        stroke:"#777",
+        "stroke-width":2
+      })
+    );
+
+    svg.appendChild(
+      svgElement("line",{
+        x1:x - 9,
+        y1:outerTop,
+        x2:x + 9,
+        y2:outerTop,
+        stroke:"#777",
+        "stroke-width":2
+      })
+    );
+
+    svg.appendChild(
+      svgElement("line",{
+        x1:x - 9,
+        y1:outerBottom,
+        x2:x + 9,
+        y2:outerBottom,
+        stroke:"#777",
+        "stroke-width":2
+      })
+    );
+
+    /*
+     * Best-Match-Niederschlagsmenge.
+     */
     if(day.rain > 0){
       svg.appendChild(
         svgElement("rect",{
-          x:x - barWidth / 2,
+          x:x - rainBarWidth / 2,
           y:y(day.rain),
-          width:barWidth,
+          width:rainBarWidth,
           height:
             y(0) -
             y(day.rain),
@@ -2507,6 +2653,7 @@ function showSearchResults(results){
       document.createElement("button");
 
     button.type = "button";
+
     button.className =
       "search-result";
 
@@ -2582,7 +2729,7 @@ async function load(){
   $("locateButton").disabled = true;
 
   setStatus(
-    "Best Match, ICON-D2-EPS, ICON-EU-EPS und Langfrist-Ensembles werden geladen …"
+    "Best Match und Seamless-Ensembles werden geladen …"
   );
 
   try{
@@ -2611,15 +2758,15 @@ async function load(){
             result.status === "fulfilled"
         )
         .map(
-          result => result.value
+          result =>
+            result.value
         );
 
     const failed =
-      ensembleResults
-        .filter(
-          result =>
-            result.status === "rejected"
-        );
+      ensembleResults.filter(
+        result =>
+          result.status === "rejected"
+      );
 
     if(!ensembles.length){
       throw new Error(
@@ -2673,7 +2820,8 @@ async function load(){
     console.error(error);
 
     setStatus(
-      "Fehler: " + error.message,
+      "Fehler: " +
+      error.message,
       true
     );
 
@@ -2748,6 +2896,7 @@ $("placeSearch").addEventListener(
   "input",
   event => {
     selectedPlace = "";
+
     clearTimeout(searchTimer);
 
     searchTimer = setTimeout(
