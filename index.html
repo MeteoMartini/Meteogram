@@ -1,6 +1,4 @@
-from pathlib import Path
-
-html = r"""<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
@@ -15,9 +13,16 @@ html = r"""<!DOCTYPE html>
   --muted:#737373;
   --grid:#b7b7b7;
   --red:#ed1111;
+  --uncertainty-red:rgba(239,100,100,.30);
+  --uncertainty-red-border:rgba(205,45,45,.38);
   --blue:#1687ef;
   --rain:#1558e8;
   --cyan:#30c9e8;
+
+  --day-width:96px;
+  --left-axis:58px;
+  --right-space:24px;
+  --canvas-width:1426px;
 }
 
 *{
@@ -48,6 +53,7 @@ body{
 }
 
 .place h1{
+  min-height:38px;
   margin:0 0 4px;
   font-size:32px;
   font-weight:400;
@@ -110,7 +116,7 @@ button:disabled{
 }
 
 /*
- * Ein einziger horizontaler Scrollbereich für:
+ * Ein gemeinsamer horizontaler Scrollbereich für:
  * - Tagesübersicht
  * - Modellkonsistenz
  * - Temperaturdiagramm
@@ -128,29 +134,29 @@ button:disabled{
 }
 
 .meteogram-canvas{
-  width:1400px;
-  min-width:1400px;
+  width:var(--canvas-width);
+  min-width:var(--canvas-width);
   padding:8px 0 6px;
 }
 
-.days,
-.conf-grid,
-.rain-prob{
+/*
+ * Alle Tageszeilen verwenden exakt dieselben Spaltenbreiten.
+ */
+.day-grid{
   display:grid;
-  grid-template-columns:repeat(14,100px);
-  padding-left:58px;
-  padding-right:24px;
+  grid-template-columns:repeat(14,var(--day-width));
+  padding-left:var(--left-axis);
+  padding-right:var(--right-space);
 }
 
 .days{
-  gap:0;
   padding-bottom:8px;
 }
 
 .day{
-  width:100px;
-  text-align:center;
+  width:var(--day-width);
   padding:4px 3px 7px;
+  text-align:center;
 }
 
 .day.weekend .dow,
@@ -167,9 +173,29 @@ button:disabled{
   font-size:18px;
 }
 
+.icons{
+  display:flex;
+  justify-content:center;
+  gap:7px;
+  margin:6px 0 4px;
+}
+
+.icon-block{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  min-width:34px;
+}
+
+.icon-label{
+  margin-bottom:1px;
+  color:#777;
+  font-size:10px;
+  line-height:1;
+}
+
 .icon{
-  margin:5px 0 4px;
-  font-size:36px;
+  font-size:28px;
   line-height:1.15;
 }
 
@@ -196,12 +222,11 @@ button:disabled{
 }
 
 .conf-grid{
-  gap:0;
   padding-bottom:10px;
 }
 
 .conf-cell{
-  width:100px;
+  width:var(--day-width);
   text-align:center;
 }
 
@@ -228,7 +253,7 @@ button:disabled{
 
 svg{
   display:block;
-  width:1400px;
+  width:var(--canvas-width);
 }
 
 #tempChart{
@@ -240,13 +265,12 @@ svg{
 }
 
 .rain-prob{
-  gap:0;
   margin-top:-20px;
   padding-bottom:8px;
 }
 
 .rain-prob div{
-  width:100px;
+  width:var(--day-width);
   text-align:center;
   color:var(--cyan);
   font-size:24px;
@@ -336,16 +360,16 @@ svg{
 
   <div id="status">Daten werden geladen …</div>
 
-  <section class="meteogram-scroll" id="meteogramScroll">
+  <section class="meteogram-scroll">
     <div class="meteogram-canvas">
 
-      <section id="days" class="days"></section>
+      <section id="days" class="days day-grid"></section>
 
       <div class="conf-title">
         Modellkonsistenz (%)
       </div>
 
-      <section id="confidence" class="conf-grid"></section>
+      <section id="confidence" class="conf-grid day-grid"></section>
 
       <div class="chart-title">
         Temperatur (°C)
@@ -353,7 +377,7 @@ svg{
 
       <svg
         id="tempChart"
-        viewBox="0 0 1400 330"
+        viewBox="0 0 1426 330"
         role="img"
         aria-label="Temperaturdiagramm">
       </svg>
@@ -364,12 +388,12 @@ svg{
 
       <svg
         id="rainChart"
-        viewBox="0 0 1400 350"
+        viewBox="0 0 1426 350"
         role="img"
         aria-label="Niederschlagsdiagramm">
       </svg>
 
-      <section id="rainProb" class="rain-prob"></section>
+      <section id="rainProb" class="rain-prob day-grid"></section>
 
     </div>
   </section>
@@ -377,10 +401,12 @@ svg{
   <div id="updated" class="updated"></div>
 
   <div class="footnote">
-    Die farbigen Temperaturflächen und Niederschlags-Fehlerbalken zeigen die
-    Spanne der erfolgreich geladenen deterministischen Modelle.
-    „Modellkonsistenz“ ist ein eigener Orientierungswert aus Modellstreuung
-    und Vorhersagehorizont und keine von Open-Meteo veröffentlichte Trefferquote.
+    Die Tages- und Nachtpiktogramme werden aus den stündlichen
+    Best-Match-Wettercodes abgeleitet. Der hellrote Temperaturbereich zeigt
+    die Spanne der erfolgreich geladenen deterministischen Modelle.
+    Die Niederschlags-Fehlerbalken zeigen ebenfalls die Modellspanne.
+    „Modellkonsistenz“ ist ein Orientierungswert und keine veröffentlichte
+    Trefferquote.
   </div>
 
 </main>
@@ -391,14 +417,43 @@ svg{
 const NS = "http://www.w3.org/2000/svg";
 const $ = id => document.getElementById(id);
 
+const DAY_WIDTH = 96;
+const LEFT = 58;
+const RIGHT = 24;
+const DAYS = 14;
+const PLOT_WIDTH = DAY_WIDTH * DAYS;
+const CANVAS_WIDTH = LEFT + PLOT_WIDTH + RIGHT;
+
 const MODELS = [
-  { id:"best_match",           label:"Best Match", main:true },
-  { id:"icon_seamless",        label:"DWD ICON" },
-  { id:"ecmwf_ifs025",         label:"ECMWF IFS" },
-  { id:"meteofrance_seamless", label:"Météo-France" },
-  { id:"ukmo_seamless",        label:"UKMO" },
-  { id:"gem_seamless",         label:"GEM" },
-  { id:"gfs_seamless",         label:"GFS" }
+  {
+    id:"best_match",
+    label:"Best Match",
+    main:true
+  },
+  {
+    id:"icon_seamless",
+    label:"DWD ICON"
+  },
+  {
+    id:"ecmwf_ifs025",
+    label:"ECMWF IFS"
+  },
+  {
+    id:"meteofrance_seamless",
+    label:"Météo-France"
+  },
+  {
+    id:"ukmo_seamless",
+    label:"UKMO"
+  },
+  {
+    id:"gem_seamless",
+    label:"GEM"
+  },
+  {
+    id:"gfs_seamless",
+    label:"GFS"
+  }
 ];
 
 function setStatus(message,error=false){
@@ -437,6 +492,7 @@ function urlFor(model){
   const params=new URLSearchParams({
     latitude:String(lat),
     longitude:String(lon),
+
     daily:[
       "weather_code",
       "temperature_2m_max",
@@ -444,6 +500,12 @@ function urlFor(model){
       "precipitation_sum",
       "precipitation_probability_max"
     ].join(","),
+
+    hourly:[
+      "weather_code",
+      "is_day"
+    ].join(","),
+
     timezone:"auto",
     forecast_days:"14",
     models:model
@@ -480,11 +542,22 @@ async function fetchModel(source){
   return {source,data};
 }
 
-function icon(code){
-  if(code===0)return"☀️";
-  if(code===1)return"🌤️";
-  if(code===2)return"⛅";
-  if(code===3)return"☁️";
+function icon(code,isDay=true){
+  if(code===0){
+    return isDay?"☀️":"🌙";
+  }
+
+  if(code===1){
+    return isDay?"🌤️":"🌙";
+  }
+
+  if(code===2){
+    return isDay?"⛅":"☁️";
+  }
+
+  if(code===3){
+    return"☁️";
+  }
 
   if(code===45||code===48){
     return"🌫️";
@@ -509,6 +582,32 @@ function icon(code){
   return"❔";
 }
 
+function severity(code){
+  if([95,96,99].includes(code))return 9;
+  if([82,86,65,67,75].includes(code))return 8;
+  if([80,81,85,61,63,66,71,73].includes(code))return 7;
+  if([51,53,55,56,57,77].includes(code))return 6;
+  if([45,48].includes(code))return 5;
+  if(code===3)return 4;
+  if(code===2)return 3;
+  if(code===1)return 2;
+  if(code===0)return 1;
+
+  return 0;
+}
+
+function representativeCode(points){
+  if(!points.length){
+    return -1;
+  }
+
+  return points.reduce((best,current)=>{
+    return severity(current.code)>severity(best.code)
+      ? current
+      : best;
+  }).code;
+}
+
 function fmtCoord(value,positive,negative){
   return `${Math.abs(value).toFixed(2)}°${value>=0?positive:negative}`;
 }
@@ -522,12 +621,75 @@ function colorForConfidence(value){
   return"#f23a3a";
 }
 
+function hourlyIconsByDay(mainData){
+  const result=new Map();
+
+  const times=mainData.hourly?.time||[];
+  const codes=mainData.hourly?.weather_code||[];
+  const isDayValues=mainData.hourly?.is_day||[];
+
+  times.forEach((time,index)=>{
+    const dateKey=time.slice(0,10);
+
+    if(!result.has(dateKey)){
+      result.set(dateKey,{
+        day:[],
+        night:[]
+      });
+    }
+
+    const point={
+      code:Number.isFinite(codes[index])
+        ? codes[index]
+        : -1,
+
+      hour:Number(time.slice(11,13))
+    };
+
+    if(Number(isDayValues[index])===1){
+      result.get(dateKey).day.push(point);
+    }else{
+      result.get(dateKey).night.push(point);
+    }
+  });
+
+  const icons=new Map();
+
+  result.forEach((value,key)=>{
+    const coreDay=value.day.filter(point=>{
+      return point.hour>=10&&point.hour<=17;
+    });
+
+    const coreNight=value.night.filter(point=>{
+      return point.hour<=5||point.hour>=22;
+    });
+
+    icons.set(key,{
+      dayCode:representativeCode(
+        coreDay.length
+          ? coreDay
+          : value.day
+      ),
+
+      nightCode:representativeCode(
+        coreNight.length
+          ? coreNight
+          : value.night
+      )
+    });
+  });
+
+  return icons;
+}
+
 function merge(results){
   const main=results.find(result=>result.source.main);
 
   if(!main){
     throw new Error("Best Match konnte nicht geladen werden.");
   }
+
+  const dayNightIcons=hourlyIconsByDay(main.data);
 
   const maps=results.map(result=>{
     const daily=result.data.daily;
@@ -597,29 +759,31 @@ function merge(results){
       )
     );
 
+    const icons=dayNightIcons.get(time)||{
+      dayCode:daily.weather_code?.[index]??-1,
+      nightCode:daily.weather_code?.[index]??-1
+    };
+
     return{
       time,
       date:new Date(time+"T12:00:00"),
-      code:daily.weather_code?.[index]??-1,
+
+      dayCode:icons.dayCode,
+      nightCode:icons.nightCode,
 
       mainMax,
       mainMin,
 
-      maxLow:maxValues.length
-        ? Math.min(...maxValues)
-        : mainMax,
-
-      maxHigh:maxValues.length
-        ? Math.max(...maxValues)
-        : mainMax,
-
-      minLow:minValues.length
+      /*
+       * Gesamter Temperaturkorridor aus Tageshöchst- und Tiefstwerten.
+       */
+      uncertaintyLow:minValues.length
         ? Math.min(...minValues)
         : mainMin,
 
-      minHigh:minValues.length
-        ? Math.max(...minValues)
-        : mainMin,
+      uncertaintyHigh:maxValues.length
+        ? Math.max(...maxValues)
+        : mainMax,
 
       rain:Number.isFinite(daily.precipitation_sum?.[index])
         ? daily.precipitation_sum[index]
@@ -679,7 +843,19 @@ function renderDays(days){
     cell.innerHTML=`
       <div class="dow">${weekday}</div>
       <div class="date">${date}</div>
-      <div class="icon">${icon(day.code)}</div>
+
+      <div class="icons">
+        <div class="icon-block">
+          <div class="icon-label">Tag</div>
+          <div class="icon">${icon(day.dayCode,true)}</div>
+        </div>
+
+        <div class="icon-block">
+          <div class="icon-label">Nacht</div>
+          <div class="icon">${icon(day.nightCode,false)}</div>
+        </div>
+      </div>
+
       <div class="tmax">${Math.round(day.mainMax)}°</div>
       <div class="tmin">${Math.round(day.mainMin)}°</div>
     `;
@@ -749,26 +925,33 @@ function band(upper,lower){
   );
 }
 
+function dayCenter(index){
+  return LEFT+(index+0.5)*DAY_WIDTH;
+}
+
+function dayBoundary(index){
+  return LEFT+index*DAY_WIDTH;
+}
+
 function drawTemp(days){
   const svg=$("tempChart");
   svg.replaceChildren();
 
-  const W=1400;
+  const W=CANVAS_WIDTH;
   const H=330;
 
   const margin={
-    l:58,
-    r:24,
+    l:LEFT,
+    r:RIGHT,
     t:18,
     b:38
   };
 
-  const plotWidth=W-margin.l-margin.r;
   const plotHeight=H-margin.t-margin.b;
 
   const allValues=[
-    ...days.map(day=>day.maxHigh),
-    ...days.map(day=>day.minLow)
+    ...days.map(day=>day.uncertaintyHigh),
+    ...days.map(day=>day.uncertaintyLow)
   ];
 
   let ymin=Math.floor(Math.min(...allValues)-2);
@@ -778,10 +961,6 @@ function drawTemp(days){
     ymax=ymin+10;
   }
 
-  const x=index=>
-    margin.l+
-    index/(days.length-1)*plotWidth;
-
   const y=value=>
     margin.t+
     (ymax-value)/
@@ -790,9 +969,9 @@ function drawTemp(days){
 
   svg.appendChild(
     svgEl("rect",{
-      x:margin.l,
+      x:LEFT,
       y:margin.t,
-      width:plotWidth,
+      width:PLOT_WIDTH,
       height:plotHeight,
       fill:"#fafafa",
       stroke:"#333"
@@ -808,17 +987,16 @@ function drawTemp(days){
   ){
     svg.appendChild(
       svgEl("line",{
-        x1:margin.l,
+        x1:LEFT,
         y1:y(value),
-        x2:W-margin.r,
+        x2:LEFT+PLOT_WIDTH,
         y2:y(value),
-        stroke:"#b8b8b8",
-        "stroke-width":1
+        stroke:"#b8b8b8"
       })
     );
 
     const label=svgEl("text",{
-      x:margin.l-8,
+      x:LEFT-8,
       y:y(value)+5,
       "text-anchor":"end",
       "font-size":16
@@ -828,82 +1006,78 @@ function drawTemp(days){
     svg.appendChild(label);
   }
 
-  days.forEach((day,index)=>{
+  for(let index=0;index<=DAYS;index++){
     svg.appendChild(
       svgEl("line",{
-        x1:x(index),
+        x1:dayBoundary(index),
         y1:margin.t,
-        x2:x(index),
+        x2:dayBoundary(index),
         y2:H-margin.b,
-        stroke:"#bbb",
-        "stroke-width":1
+        stroke:"#bbb"
       })
     );
-  });
+  }
 
-  const maxUpper=days.map((day,index)=>[
-    x(index),
-    y(day.maxHigh)
+  const uncertaintyUpper=days.map((day,index)=>[
+    dayCenter(index),
+    y(day.uncertaintyHigh)
   ]);
 
-  const maxLower=days.map((day,index)=>[
-    x(index),
-    y(day.maxLow)
+  const uncertaintyLower=days.map((day,index)=>[
+    dayCenter(index),
+    y(day.uncertaintyLow)
   ]);
 
-  const minUpper=days.map((day,index)=>[
-    x(index),
-    y(day.minHigh)
-  ]);
-
-  const minLower=days.map((day,index)=>[
-    x(index),
-    y(day.minLow)
-  ]);
-
+  /*
+   * Hellroter Unsicherheitsbereich.
+   */
   svg.appendChild(
     svgEl("path",{
-      d:band(maxUpper,maxLower),
-      fill:"rgba(65,205,80,.43)",
-      stroke:"none"
+      d:band(
+        uncertaintyUpper,
+        uncertaintyLower
+      ),
+      fill:"rgba(239,100,100,.30)",
+      stroke:"rgba(205,45,45,.38)",
+      "stroke-width":1.2
     })
   );
 
-  svg.appendChild(
-    svgEl("path",{
-      d:band(minUpper,minLower),
-      fill:"rgba(66,129,225,.42)",
-      stroke:"none"
-    })
-  );
-
+  /*
+   * Rote Linie: Best-Match-Tagesmaximum.
+   */
   svg.appendChild(
     svgEl("path",{
       d:path(
         days.map((day,index)=>[
-          x(index),
+          dayCenter(index),
           y(day.mainMax)
         ])
       ),
       fill:"none",
       stroke:"#ed1111",
       "stroke-width":6,
-      "stroke-linejoin":"round"
+      "stroke-linejoin":"round",
+      "stroke-linecap":"round"
     })
   );
 
+  /*
+   * Blaue Linie: Best-Match-Tagesminimum.
+   */
   svg.appendChild(
     svgEl("path",{
       d:path(
         days.map((day,index)=>[
-          x(index),
+          dayCenter(index),
           y(day.mainMin)
         ])
       ),
       fill:"none",
       stroke:"#1687ef",
       "stroke-width":6,
-      "stroke-linejoin":"round"
+      "stroke-linejoin":"round",
+      "stroke-linecap":"round"
     })
   );
 }
@@ -912,17 +1086,16 @@ function drawRain(days){
   const svg=$("rainChart");
   svg.replaceChildren();
 
-  const W=1400;
+  const W=CANVAS_WIDTH;
   const H=350;
 
   const margin={
-    l:58,
-    r:24,
+    l:LEFT,
+    r:RIGHT,
     t:34,
     b:48
   };
 
-  const plotWidth=W-margin.l-margin.r;
   const plotHeight=H-margin.t-margin.b;
 
   const maxValue=Math.max(
@@ -939,26 +1112,19 @@ function drawRain(days){
           ? 10
           : Math.ceil(maxValue/5)*5;
 
-  const x=index=>
-    margin.l+
-    index/(days.length-1)*plotWidth;
-
   const y=value=>
     margin.t+
     (axisMax-value)/
     axisMax*
     plotHeight;
 
-  const barWidth=Math.max(
-    18,
-    plotWidth/days.length*0.66
-  );
+  const barWidth=DAY_WIDTH*0.62;
 
   svg.appendChild(
     svgEl("rect",{
-      x:margin.l,
+      x:LEFT,
       y:margin.t,
-      width:plotWidth,
+      width:PLOT_WIDTH,
       height:plotHeight,
       fill:"#fafafa",
       stroke:"#333"
@@ -974,16 +1140,16 @@ function drawRain(days){
   ){
     svg.appendChild(
       svgEl("line",{
-        x1:margin.l,
+        x1:LEFT,
         y1:y(value),
-        x2:W-margin.r,
+        x2:LEFT+PLOT_WIDTH,
         y2:y(value),
         stroke:"#b8b8b8"
       })
     );
 
     const label=svgEl("text",{
-      x:margin.l-8,
+      x:LEFT-8,
       y:y(value)+5,
       "text-anchor":"end",
       "font-size":16
@@ -993,18 +1159,20 @@ function drawRain(days){
     svg.appendChild(label);
   }
 
-  days.forEach((day,index)=>{
-    const px=x(index);
-
+  for(let index=0;index<=DAYS;index++){
     svg.appendChild(
       svgEl("line",{
-        x1:px,
+        x1:dayBoundary(index),
         y1:margin.t,
-        x2:px,
+        x2:dayBoundary(index),
         y2:H-margin.b,
         stroke:"#bbb"
       })
     );
+  }
+
+  days.forEach((day,index)=>{
+    const px=dayCenter(index);
 
     if(day.rain>0){
       svg.appendChild(
@@ -1167,6 +1335,7 @@ function locate(){
       "Standortermittlung wird von diesem Browser nicht unterstützt.",
       true
     );
+
     return;
   }
 
@@ -1230,8 +1399,3 @@ window.addEventListener(
 </script>
 </body>
 </html>
-"""
-
-path = Path("/mnt/data/open_meteo_meteogramm_einheitlich_scrollbar.html")
-path.write_text(html, encoding="utf-8")
-print(path)
