@@ -2,58 +2,136 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>5-Tage-Wetterdiagramm</title>
+<meta
+  name="viewport"
+  content="width=device-width,initial-scale=1,viewport-fit=cover"
+>
+<title>Seamless Wetter-Meteogramm</title>
 
 <style>
-*{box-sizing:border-box}
+:root{
+  --page-bg:#eef2f6;
+  --panel-bg:#ffffff;
+  --panel-soft:#f7f9fb;
+  --text:#17212b;
+  --muted:#687482;
+  --border:#d7dee6;
+  --grid:#bac3cc;
+  --brand:#15527e;
+  --button:#17699e;
+  --button-hover:#10567f;
+
+  --red:#ee1717;
+  --blue:#1688ee;
+  --rain:#075ee9;
+  --teal:#168c91;
+
+  --red-inner:rgba(238,75,75,.31);
+  --red-outer:rgba(238,75,75,.13);
+  --blue-inner:rgba(55,128,225,.28);
+  --blue-outer:rgba(55,128,225,.12);
+
+  --day-width:98px;
+  --axis-width:58px;
+  --right-space:22px;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+html{
+  -webkit-text-size-adjust:100%;
+}
 
 body{
   margin:0;
-  background:#f3f3f3;
-  color:#111;
-  font-family:Arial,Helvetica,sans-serif;
+  background:var(--page-bg);
+  color:var(--text);
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Arial,
+    sans-serif;
+}
+
+button,
+input,
+select{
+  font:inherit;
+}
+
+button{
+  touch-action:manipulation;
 }
 
 .app{
-  width:100%;
-  max-width:1450px;
+  width:min(1540px,100%);
   min-height:100vh;
   margin:auto;
-  padding:18px 22px;
-  background:#fff;
+  padding:18px;
 }
 
-.header{
+.surface{
+  overflow:hidden;
+  border:1px solid var(--border);
+  border-radius:18px;
+  background:var(--panel-bg);
+  box-shadow:
+    0 8px 30px rgba(32,52,70,.08),
+    0 1px 2px rgba(32,52,70,.05);
+}
+
+.app-header{
   display:flex;
   justify-content:space-between;
-  gap:20px;
+  align-items:flex-start;
+  gap:24px;
+  padding:22px 24px 14px;
 }
 
-.header h1{
-  min-height:38px;
+.place-title{
+  min-height:39px;
   margin:0;
   font-size:32px;
-  font-weight:400;
+  font-weight:500;
+  line-height:1.15;
 }
 
 .coordinates{
-  min-height:26px;
-  margin-top:3px;
-  font-size:21px;
+  min-height:25px;
+  margin-top:4px;
+  color:var(--muted);
+  font-size:20px;
 }
 
 .brand{
-  color:#1a527c;
+  color:var(--brand);
   font-size:25px;
-  font-weight:700;
+  font-weight:750;
+  text-align:right;
+}
+
+.brand-small{
+  display:block;
+  margin-top:3px;
+  color:var(--muted);
+  font-size:12px;
+  font-weight:500;
 }
 
 .controls{
   display:grid;
-  grid-template-columns:minmax(250px,1.8fr) 120px 120px auto auto;
+  grid-template-columns:
+    minmax(250px,1.8fr)
+    122px
+    122px
+    auto
+    auto;
   gap:9px;
-  margin:14px 0 10px;
+  padding:0 24px 13px;
 }
 
 .search-wrap{
@@ -61,45 +139,69 @@ body{
 }
 
 input,
-button{
+select,
+.control-button{
   width:100%;
-  min-height:42px;
-  padding:8px 10px;
-  border:1px solid #bbb;
-  border-radius:7px;
-  font:inherit;
+  min-height:43px;
+  padding:8px 11px;
+  border:1px solid #c6d0da;
+  border-radius:9px;
+  background:#fff;
+  color:var(--text);
 }
 
-button{
+input:focus,
+select:focus{
+  border-color:#4d94c0;
+  outline:3px solid rgba(50,132,184,.13);
+}
+
+.control-button{
   border:0;
-  background:#1e679a;
+  background:var(--button);
   color:#fff;
   font-weight:700;
   cursor:pointer;
 }
 
-button.secondary{
-  background:#52697a;
+.control-button:hover{
+  background:var(--button-hover);
 }
 
-button:disabled{
+.control-button.secondary{
+  background:#5b6d7b;
+}
+
+.control-button.secondary:hover{
+  background:#455662;
+}
+
+.control-button.widget-button{
+  background:#7149a2;
+}
+
+.control-button.widget-button:hover{
+  background:#5d3989;
+}
+
+.control-button:disabled{
   opacity:.55;
   cursor:default;
 }
 
 .search-results{
   position:absolute;
-  z-index:30;
-  top:46px;
+  z-index:50;
+  top:48px;
   right:0;
   left:0;
   display:none;
-  max-height:300px;
+  max-height:320px;
   overflow:auto;
-  border:1px solid #bbb;
-  border-radius:8px;
+  border:1px solid #bfcbd5;
+  border-radius:10px;
   background:#fff;
-  box-shadow:0 8px 22px rgba(0,0,0,.18);
+  box-shadow:0 12px 28px rgba(20,39,56,.2);
 }
 
 .search-results.open{
@@ -109,18 +211,20 @@ button:disabled{
 .search-result{
   display:block;
   width:100%;
-  padding:10px;
+  min-height:auto;
+  padding:10px 12px;
   border:0;
-  border-bottom:1px solid #e6e6e6;
+  border-bottom:1px solid #e4e8ec;
   border-radius:0;
   background:#fff;
-  color:#111;
+  color:var(--text);
   text-align:left;
-  white-space:normal;
+  cursor:pointer;
 }
 
-.search-result:hover{
-  background:#edf5fa;
+.search-result:hover,
+.search-result:focus{
+  background:#edf6fb;
 }
 
 .search-result strong,
@@ -130,47 +234,293 @@ button:disabled{
 
 .search-result span{
   margin-top:2px;
-  color:#666;
+  color:var(--muted);
   font-size:12px;
 }
 
+.status-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  padding:0 24px 13px;
+}
+
 .status{
-  min-height:20px;
-  margin-bottom:8px;
-  color:#666;
-  font-size:14px;
+  min-height:19px;
+  color:var(--muted);
+  font-size:13px;
 }
 
 .status.error{
-  color:#a00000;
+  color:#a40000;
   font-weight:700;
 }
 
+.view-switch{
+  display:flex;
+  gap:6px;
+  padding:5px;
+  border:1px solid var(--border);
+  border-radius:11px;
+  background:#f1f5f8;
+}
+
+.view-button{
+  min-height:35px;
+  padding:7px 13px;
+  border:0;
+  border-radius:8px;
+  background:transparent;
+  color:#445462;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.view-button.active{
+  background:#fff;
+  color:#135d8c;
+  box-shadow:0 1px 4px rgba(27,48,65,.14);
+}
+
+.panel{
+  display:none;
+}
+
+.panel.active{
+  display:block;
+}
+
+.meteogram-scroll,
 .detail-scroll{
   width:100%;
   overflow-x:auto;
+  overflow-y:hidden;
   -webkit-overflow-scrolling:touch;
-  border-top:1px solid #ddd;
-  border-bottom:1px solid #ddd;
+  overscroll-behavior-inline:contain;
+  border-top:1px solid var(--border);
+  scrollbar-width:thin;
 }
 
+.meteogram-canvas{
+  width:calc(
+    var(--axis-width) +
+    14 * var(--day-width) +
+    var(--right-space)
+  );
+
+  min-width:calc(
+    var(--axis-width) +
+    14 * var(--day-width) +
+    var(--right-space)
+  );
+
+  padding:12px 0 10px;
+}
+
+.grid14{
+  display:grid;
+  grid-template-columns:repeat(14,var(--day-width));
+  padding-right:var(--right-space);
+  padding-left:var(--axis-width);
+}
+
+.day-card{
+  width:var(--day-width);
+  padding:4px 2px 8px;
+  text-align:center;
+}
+
+.day-card.weekend .weekday,
+.day-card.weekend .date{
+  color:#d20a0a;
+}
+
+.weekday{
+  font-size:19px;
+  font-weight:600;
+}
+
+.date{
+  margin-top:1px;
+  font-size:16px;
+}
+
+.weather-icons{
+  display:flex;
+  justify-content:center;
+  align-items:flex-end;
+  gap:3px;
+  min-height:52px;
+  margin:6px 0 4px;
+}
+
+.day-icons{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-width:49px;
+}
+
+.day-icon{
+  font-size:28px;
+  line-height:1;
+}
+
+.day-icon.secondary{
+  margin-left:-3px;
+  font-size:20px;
+}
+
+.change-arrow{
+  margin:0 -3px;
+  color:#77818a;
+  font-size:11px;
+}
+
+.night-block{
+  display:flex;
+  min-width:22px;
+  flex-direction:column;
+  align-items:center;
+}
+
+.night-label{
+  margin-bottom:1px;
+  color:#87919a;
+  font-size:8px;
+}
+
+.night-icon{
+  font-size:16px;
+  line-height:1;
+}
+
+.maximum{
+  color:var(--red);
+  font-size:23px;
+  font-weight:650;
+}
+
+.minimum{
+  color:var(--blue);
+  font-size:22px;
+  font-weight:600;
+}
+
+.section-title{
+  margin:18px 0 7px;
+  text-align:center;
+  font-size:23px;
+  font-weight:500;
+}
+
+.confidence-cell{
+  width:var(--day-width);
+  text-align:center;
+}
+
+.confidence-track{
+  width:min(59px,calc(var(--day-width) - 17px));
+  height:13px;
+  margin:0 auto 4px;
+  overflow:hidden;
+  border-radius:2px;
+  background:#92999f;
+}
+
+.confidence-fill{
+  height:100%;
+}
+
+.confidence-value{
+  font-size:21px;
+}
+
+.meteogram-canvas svg{
+  display:block;
+  width:calc(
+    var(--axis-width) +
+    14 * var(--day-width) +
+    var(--right-space)
+  );
+}
+
+#temperature14{
+  height:350px;
+}
+
+#rain14{
+  height:335px;
+}
+
+.probability-grid{
+  margin-top:-17px;
+  padding-bottom:7px;
+}
+
+.probability{
+  width:var(--day-width);
+  text-align:center;
+  font-size:22px;
+  font-weight:700;
+}
+
+.legend{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px 17px;
+  padding:12px 24px 4px;
+  color:var(--muted);
+  font-size:12px;
+}
+
+.legend-item{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+.legend-line{
+  width:27px;
+  border-top:4px solid;
+}
+
+.legend-box{
+  width:27px;
+  height:11px;
+  border-radius:2px;
+}
+
+.footer-info{
+  display:flex;
+  justify-content:space-between;
+  gap:14px;
+  padding:8px 24px 17px;
+  color:var(--muted);
+  font-size:13px;
+}
+
+/* 5-Tage-Detailansicht */
+
 .detail-canvas{
-  width:1280px;
-  min-width:1280px;
-  padding:8px 0;
+  width:1320px;
+  min-width:1320px;
+  padding:12px 0 10px;
 }
 
 .detail-days{
   display:grid;
-  grid-template-columns:repeat(5,238px);
+  grid-template-columns:repeat(5,244px);
   padding-right:10px;
-  padding-left:80px;
+  padding-left:90px;
 }
 
 .detail-day{
   padding:4px;
   text-align:center;
-  font-size:19px;
+  font-size:18px;
+  font-weight:600;
 }
 
 .detail-day.weekend{
@@ -181,91 +531,553 @@ button:disabled{
   margin:12px 0 3px;
   text-align:center;
   font-size:22px;
+  font-weight:500;
 }
 
-svg{
+.detail-canvas svg{
   display:block;
-  width:1280px;
+  width:1320px;
 }
 
-#temperatureChart{
-  height:330px;
+#detailTemperature{
+  height:360px;
 }
 
-#cloudRainChart{
-  height:280px;
+#detailCloudRain{
+  height:290px;
 }
 
-#windChart{
-  height:310px;
+#detailWind{
+  height:325px;
 }
 
-.legend{
+.detail-legend{
   display:flex;
   flex-wrap:wrap;
-  gap:16px;
-  margin:8px 0 4px;
-  padding-left:80px;
-  color:#555;
-  font-size:13px;
+  gap:15px;
+  padding:9px 90px 4px;
+  color:var(--muted);
+  font-size:12px;
 }
 
-.legend-item{
+/* Widget-Dialog */
+
+.modal-backdrop{
+  position:fixed;
+  z-index:1000;
+  inset:0;
+  display:none;
+  align-items:flex-start;
+  justify-content:center;
+  overflow:auto;
+  padding:22px;
+  background:rgba(12,25,36,.56);
+  backdrop-filter:blur(3px);
+}
+
+.modal-backdrop.open{
+  display:flex;
+}
+
+.widget-modal{
+  width:min(1120px,100%);
+  overflow:hidden;
+  border-radius:18px;
+  background:#eef2f6;
+  box-shadow:0 22px 70px rgba(0,0,0,.35);
+}
+
+.widget-modal-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:16px;
+  padding:16px 19px;
+  background:#fff;
+}
+
+.widget-modal-title{
+  margin:0;
+  font-size:22px;
+}
+
+.close-button{
+  width:39px;
+  height:39px;
+  border:0;
+  border-radius:50%;
+  background:#edf1f4;
+  color:#374653;
+  font-size:23px;
+  cursor:pointer;
+}
+
+.widget-layout{
+  display:grid;
+  grid-template-columns:minmax(300px,430px) 1fr;
+  gap:17px;
+  padding:17px;
+}
+
+.widget-preview-panel,
+.widget-settings{
+  border:1px solid #d3dbe3;
+  border-radius:15px;
+  background:#fff;
+}
+
+.widget-preview-panel{
+  position:sticky;
+  top:0;
+  align-self:start;
+  padding:17px;
+}
+
+.widget-preview-title{
+  margin:0 0 11px;
+  color:#50606d;
+  font-size:14px;
+  font-weight:700;
+}
+
+.widget-frame-wrap{
+  display:flex;
+  justify-content:center;
+  overflow:auto;
+  padding:15px;
+  border-radius:13px;
+  background:#d9dee4;
+}
+
+.widget-card{
+  --widget-bg:#fff;
+  --widget-text:#17212b;
+  --widget-muted:#65717b;
+  --widget-cell:#edf5f8;
+  --widget-border:#cfd9e0;
+
+  width:100%;
+  min-width:280px;
+  overflow:hidden;
+  border:1px solid var(--widget-border);
+  border-radius:4px;
+  background:var(--widget-bg);
+  color:var(--widget-text);
+  box-shadow:0 2px 9px rgba(0,0,0,.11);
+}
+
+.widget-card.dark{
+  --widget-bg:#18232d;
+  --widget-text:#f3f6f8;
+  --widget-muted:#bcc6ce;
+  --widget-cell:#263540;
+  --widget-border:#435360;
+}
+
+.widget-head{
+  padding:10px 11px 7px;
+}
+
+.widget-place{
+  font-size:20px;
+  font-weight:650;
+}
+
+.widget-coordinates{
+  color:var(--widget-muted);
+  font-size:12px;
+}
+
+.widget-days{
+  display:grid;
+  width:100%;
+}
+
+.widget-day{
+  min-width:0;
+  padding:4px 3px 7px;
+  border-top:1px solid var(--widget-border);
+  border-right:1px solid var(--widget-border);
+  text-align:center;
+}
+
+.widget-day:last-child{
+  border-right:0;
+}
+
+.widget-weekday{
+  font-size:16px;
+  font-weight:750;
+}
+
+.widget-date{
+  font-size:12px;
+}
+
+.widget-pictogram{
   display:flex;
   align-items:center;
-  gap:6px;
+  justify-content:center;
+  height:49px;
+  margin:4px 0;
+  background:#63b6dc;
+  font-size:26px;
 }
 
-.legend-line{
-  width:28px;
-  border-top:4px solid;
+.widget-max,
+.widget-min{
+  padding:4px 2px;
+  font-size:15px;
+  font-weight:750;
 }
 
-.updated{
-  margin-top:8px;
-  color:#777;
-  font-size:16px;
+.widget-max{
+  background:#ff971b;
+  color:#151515;
 }
 
-.note{
-  margin-top:6px;
-  color:#777;
+.widget-min{
+  background:#68ce26;
+  color:#10200b;
+}
+
+.widget-wind,
+.widget-gust,
+.widget-direction,
+.widget-rain,
+.widget-probability{
+  padding-top:5px;
+  color:var(--widget-text);
+  font-size:11px;
+}
+
+.widget-direction{
+  height:25px;
+  font-size:22px;
+  line-height:22px;
+}
+
+.widget-rain{
+  color:#2395d5;
+}
+
+.widget-probability{
+  padding-bottom:7px;
+  color:#2e98d5;
+}
+
+.widget-settings{
+  padding:20px;
+}
+
+.settings-section{
+  margin-bottom:26px;
+}
+
+.settings-section:last-child{
+  margin-bottom:0;
+}
+
+.settings-title{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  margin:0 0 13px;
+  color:#134f79;
+  font-size:17px;
+}
+
+.settings-description{
+  margin:-4px 0 14px;
+  color:#52616e;
+  font-size:14px;
+  line-height:1.5;
+}
+
+.segmented{
+  display:flex;
+  flex-wrap:wrap;
+  width:max-content;
+  max-width:100%;
+  overflow:hidden;
+  border:1px solid #c5d9e7;
+  border-radius:9px;
+  background:#eaf2f7;
+}
+
+.segment-button{
+  min-width:82px;
+  min-height:42px;
+  padding:8px 17px;
+  border:0;
+  border-right:1px solid #d4e1ea;
+  background:transparent;
+  color:#334b5d;
+  cursor:pointer;
+}
+
+.segment-button:last-child{
+  border-right:0;
+}
+
+.segment-button.active{
+  background:#fff;
+  color:#0c5689;
+  box-shadow:0 1px 4px rgba(22,75,109,.13);
+}
+
+.range-row{
+  display:grid;
+  grid-template-columns:1fr 76px;
+  align-items:center;
+  gap:12px;
+}
+
+.range-row input[type="range"]{
+  padding:0;
+  border:0;
+  outline:0;
+}
+
+.range-output{
+  padding:8px;
+  border:1px solid #c9d5df;
+  border-radius:8px;
+  background:#f7fafc;
+  text-align:center;
+  font-weight:700;
+}
+
+.option-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(160px,1fr));
+  gap:10px 15px;
+}
+
+.check-row{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  min-height:32px;
+}
+
+.check-row input{
+  width:20px;
+  min-height:20px;
+  margin:0;
+  accent-color:#1175b6;
+}
+
+.embed-area{
+  width:100%;
+  min-height:105px;
+  resize:vertical;
+  padding:10px;
+  border:1px solid #cbd6df;
+  border-radius:9px;
+  background:#f6f8fa;
+  color:#26343f;
+  font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
   font-size:12px;
-  line-height:1.4;
+  line-height:1.45;
 }
 
-@media(max-width:700px){
-  .app{
-    padding:10px 8px;
-  }
+.copy-button{
+  width:auto;
+  margin-top:9px;
+}
 
-  .header{
-    display:block;
-  }
+/* Reiner Widget-Modus */
 
-  .header h1{
-    font-size:24px;
-  }
+body.widget-mode{
+  background:transparent;
+}
 
-  .coordinates{
-    font-size:17px;
-  }
+body.widget-mode .app{
+  width:100%;
+  min-height:0;
+  padding:0;
+}
 
-  .brand{
-    margin-top:5px;
-    font-size:18px;
-  }
+body.widget-mode .surface{
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+}
 
+body.widget-mode .app-header,
+body.widget-mode .controls,
+body.widget-mode .status-row,
+body.widget-mode .view-switch,
+body.widget-mode #panel14,
+body.widget-mode #panel5,
+body.widget-mode .footer-info,
+body.widget-mode .legend{
+  display:none !important;
+}
+
+#standaloneWidget{
+  display:none;
+}
+
+body.widget-mode #standaloneWidget{
+  display:block;
+}
+
+/* Responsive */
+
+@media(max-width:1000px){
   .controls{
-    grid-template-columns:1fr 1fr;
+    grid-template-columns:1fr 1fr 1fr;
   }
 
   .search-wrap{
     grid-column:1/-1;
   }
+
+  .widget-layout{
+    grid-template-columns:1fr;
+  }
+
+  .widget-preview-panel{
+    position:static;
+  }
 }
 
-@media(max-width:390px){
+@media(max-width:700px){
+  :root{
+    --day-width:76px;
+    --axis-width:44px;
+    --right-space:10px;
+  }
+
+  .app{
+    padding:8px;
+  }
+
+  .surface{
+    border-radius:12px;
+  }
+
+  .app-header{
+    display:block;
+    padding:16px 14px 10px;
+  }
+
+  .place-title{
+    min-height:29px;
+    font-size:24px;
+  }
+
+  .coordinates{
+    font-size:16px;
+  }
+
+  .brand{
+    margin-top:5px;
+    font-size:18px;
+    text-align:left;
+  }
+
+  .controls{
+    grid-template-columns:1fr 1fr;
+    padding-right:14px;
+    padding-left:14px;
+  }
+
+  .search-wrap{
+    grid-column:1/-1;
+  }
+
+  .status-row{
+    display:block;
+    padding-right:14px;
+    padding-left:14px;
+  }
+
+  .view-switch{
+    width:100%;
+    margin-top:8px;
+  }
+
+  .view-button{
+    flex:1;
+  }
+
+  .weekday{
+    font-size:15px;
+  }
+
+  .date{
+    font-size:13px;
+  }
+
+  .day-icon{
+    font-size:23px;
+  }
+
+  .day-icon.secondary{
+    font-size:17px;
+  }
+
+  .night-icon{
+    font-size:14px;
+  }
+
+  .maximum,
+  .minimum{
+    font-size:19px;
+  }
+
+  .section-title{
+    font-size:18px;
+  }
+
+  .confidence-value,
+  .probability{
+    font-size:17px;
+  }
+
+  #temperature14{
+    height:290px;
+  }
+
+  #rain14{
+    height:290px;
+  }
+
+  .legend,
+  .footer-info{
+    padding-right:14px;
+    padding-left:14px;
+  }
+
+  .footer-info{
+    display:block;
+  }
+
+  .modal-backdrop{
+    padding:7px;
+  }
+
+  .widget-modal{
+    border-radius:13px;
+  }
+
+  .widget-layout{
+    padding:9px;
+  }
+
+  .widget-settings{
+    padding:15px;
+  }
+
+  .option-grid{
+    grid-template-columns:1fr;
+  }
+}
+
+@media(max-width:420px){
   .controls{
     grid-template-columns:1fr;
   }
@@ -273,141 +1085,494 @@ svg{
   .search-wrap{
     grid-column:auto;
   }
+
+  .widget-frame-wrap{
+    justify-content:flex-start;
+  }
 }
 </style>
 </head>
 
 <body>
+
 <main class="app">
+  <div class="surface">
 
-<header class="header">
-  <div>
-    <h1 id="placeName"></h1>
-    <div id="coordinates" class="coordinates"></div>
-  </div>
-
-  <div class="brand">5-Tage-Wetterdiagramm</div>
-</header>
-
-<section class="controls">
-  <div class="search-wrap">
-    <input
-      id="placeSearch"
-      type="search"
-      placeholder="Ort, Gemeinde oder Postleitzahl suchen"
-      autocomplete="off"
-    >
-
-    <div
-      id="searchResults"
-      class="search-results">
-    </div>
-  </div>
-
-  <input
-    id="latitude"
-    type="number"
-    step="0.0001"
-    value="51.9487"
-    aria-label="Breitengrad"
-  >
-
-  <input
-    id="longitude"
-    type="number"
-    step="0.0001"
-    value="7.6745"
-    aria-label="Längengrad"
-  >
-
-  <button
-    id="locateButton"
-    class="secondary"
-    type="button">
-    📍 Standort
-  </button>
-
-  <button
-    id="updateButton"
-    type="button">
-    Aktualisieren
-  </button>
-</section>
-
-<div id="status" class="status">
-  Daten werden geladen …
-</div>
-
-<section class="detail-scroll">
-  <div class="detail-canvas">
-
-    <section id="detailDays" class="detail-days"></section>
-
-    <div class="detail-title">
-      Temperatur (°C)
-    </div>
-
-    <svg
-      id="temperatureChart"
-      viewBox="0 0 1280 330"
-      role="img"
-      aria-label="Temperaturverlauf und Wetterpiktogramme">
-    </svg>
-
-    <div class="detail-title">
-      Niederschlag (mm/h) / Wolkenbedeckung (%)
-    </div>
-
-    <svg
-      id="cloudRainChart"
-      viewBox="0 0 1280 280"
-      role="img"
-      aria-label="Niederschlag und Wolkenbedeckung">
-    </svg>
-
-    <div class="detail-title">
-      Windgeschwindigkeit (kt) / Windböen (kt)
-    </div>
-
-    <svg
-      id="windChart"
-      viewBox="0 0 1280 310"
-      role="img"
-      aria-label="Windgeschwindigkeit und Windfiedern">
-    </svg>
-
-    <div class="legend">
-      <div class="legend-item">
-        <span
-          class="legend-line"
-          style="border-color:#1687ef">
-        </span>
-        Windgeschwindigkeit
+    <header class="app-header">
+      <div>
+        <h1 id="placeName" class="place-title"></h1>
+        <div id="coordinates" class="coordinates"></div>
       </div>
 
-      <div class="legend-item">
-        <span
-          class="legend-line"
-          style="border-color:#178d8e">
+      <div class="brand">
+        Wetter-Meteogramm
+        <span class="brand-small">
+          Best Match + Ensemble
         </span>
-        Windböen
+      </div>
+    </header>
+
+    <section class="controls">
+      <div class="search-wrap">
+        <input
+          id="placeSearch"
+          type="search"
+          placeholder="Ort, Gemeinde oder Postleitzahl suchen"
+          autocomplete="off"
+        >
+
+        <div
+          id="searchResults"
+          class="search-results">
+        </div>
+      </div>
+
+      <input
+        id="latitude"
+        type="number"
+        step="0.0001"
+        value="51.9487"
+        aria-label="Breitengrad"
+      >
+
+      <input
+        id="longitude"
+        type="number"
+        step="0.0001"
+        value="7.6745"
+        aria-label="Längengrad"
+      >
+
+      <button
+        id="locateButton"
+        class="control-button secondary"
+        type="button">
+        📍 Standort
+      </button>
+
+      <button
+        id="updateButton"
+        class="control-button"
+        type="button">
+        Aktualisieren
+      </button>
+    </section>
+
+    <div class="status-row">
+      <div id="status" class="status">
+        Daten werden geladen …
+      </div>
+
+      <div class="view-switch">
+        <button
+          id="show14Button"
+          class="view-button active"
+          type="button">
+          14 Tage
+        </button>
+
+        <button
+          id="show5Button"
+          class="view-button"
+          type="button">
+          5 Tage detailliert
+        </button>
+
+        <button
+          id="widgetButton"
+          class="view-button"
+          type="button">
+          Widget erstellen
+        </button>
       </div>
     </div>
 
+    <section id="panel14" class="panel active">
+      <div class="meteogram-scroll">
+        <div class="meteogram-canvas">
+
+          <section id="days14" class="grid14"></section>
+
+          <div class="section-title">
+            Ensemble-Konsistenz (%)
+          </div>
+
+          <section
+            id="confidence14"
+            class="grid14">
+          </section>
+
+          <div class="section-title">
+            Temperatur (°C)
+          </div>
+
+          <svg
+            id="temperature14"
+            role="img"
+            aria-label="Temperatur und Ensemblebereiche">
+          </svg>
+
+          <div class="section-title">
+            Niederschlag (mm) /
+            Niederschlagswahrscheinlichkeit (%)
+          </div>
+
+          <svg
+            id="rain14"
+            role="img"
+            aria-label="Niederschlag und mögliche Spanne">
+          </svg>
+
+          <section
+            id="probability14"
+            class="grid14 probability-grid">
+          </section>
+
+        </div>
+      </div>
+
+      <div class="legend">
+        <div class="legend-item">
+          <span
+            class="legend-line"
+            style="border-color:#ee1717">
+          </span>
+          Höchsttemperatur
+        </div>
+
+        <div class="legend-item">
+          <span
+            class="legend-box"
+            style="background:rgba(238,75,75,.31)">
+          </span>
+          innerer Bereich
+        </div>
+
+        <div class="legend-item">
+          <span
+            class="legend-box"
+            style="background:rgba(238,75,75,.13)">
+          </span>
+          äußerer Bereich
+        </div>
+
+        <div class="legend-item">
+          <span
+            class="legend-line"
+            style="border-color:#1688ee">
+          </span>
+          Tiefsttemperatur
+        </div>
+
+        <div class="legend-item">
+          <span
+            class="legend-line"
+            style="border-color:#075ee9">
+          </span>
+          Niederschlag
+        </div>
+
+        <div class="legend-item">
+          Graue Fehlerbalken: mögliche Niederschlagsspanne
+        </div>
+      </div>
+    </section>
+
+    <section id="panel5" class="panel">
+      <div class="detail-scroll">
+        <div class="detail-canvas">
+
+          <section
+            id="detailDays"
+            class="detail-days">
+          </section>
+
+          <div class="detail-title">
+            Temperatur (°C)
+          </div>
+
+          <svg
+            id="detailTemperature"
+            viewBox="0 0 1320 360"
+            role="img"
+            aria-label="Stündlicher Temperaturverlauf">
+          </svg>
+
+          <div class="detail-title">
+            Niederschlag (mm/h) /
+            Wolkenbedeckung (%)
+          </div>
+
+          <svg
+            id="detailCloudRain"
+            viewBox="0 0 1320 290"
+            role="img"
+            aria-label="Niederschlag und Wolken">
+          </svg>
+
+          <div class="detail-title">
+            Windgeschwindigkeit (kt) /
+            Windböen (kt)
+          </div>
+
+          <svg
+            id="detailWind"
+            viewBox="0 0 1320 325"
+            role="img"
+            aria-label="Wind und Windfiedern">
+          </svg>
+
+          <div class="detail-legend">
+            <div class="legend-item">
+              <span
+                class="legend-line"
+                style="border-color:#1688ee">
+              </span>
+              Windgeschwindigkeit
+            </div>
+
+            <div class="legend-item">
+              <span
+                class="legend-line"
+                style="border-color:#168c91">
+              </span>
+              Windböen
+            </div>
+
+            <div>
+              WMO-Windfiedern zeigen zur Herkunftsrichtung des Windes.
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <section id="standaloneWidget"></section>
+
+    <div class="footer-info">
+      <div id="updated"></div>
+
+      <div>
+        5-Tage-Ansicht und Widget: Best Match
+      </div>
+    </div>
+
   </div>
-</section>
-
-<div id="updated" class="updated"></div>
-
-<div class="note">
-  Die Ansicht verwendet Open-Meteo Best Match. Wetterpiktogramme werden
-  alle drei Stunden dargestellt. Die Windfiedern folgen der meteorologischen
-  Konvention: Der Schaft zeigt in die Richtung, aus der der Wind kommt.
-  Eine halbe Fieder entspricht 5 kt, eine volle Fieder 10 kt und ein
-  Dreieck 50 kt.
-</div>
-
 </main>
+
+<div
+  id="widgetModalBackdrop"
+  class="modal-backdrop"
+  aria-hidden="true">
+
+  <div
+    class="widget-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="widgetModalTitle">
+
+    <div class="widget-modal-header">
+      <h2
+        id="widgetModalTitle"
+        class="widget-modal-title">
+        Wetter-Widget erstellen
+      </h2>
+
+      <button
+        id="closeWidgetButton"
+        class="close-button"
+        type="button"
+        aria-label="Schließen">
+        ×
+      </button>
+    </div>
+
+    <div class="widget-layout">
+
+      <section class="widget-preview-panel">
+        <h3 class="widget-preview-title">
+          Vorschau
+        </h3>
+
+        <div class="widget-frame-wrap">
+          <div
+            id="widgetPreview"
+            class="widget-card">
+          </div>
+        </div>
+      </section>
+
+      <section class="widget-settings">
+
+        <div class="settings-section">
+          <h3 class="settings-title">
+            Ort
+          </h3>
+
+          <p class="settings-description">
+            Das Widget verwendet den aktuell ausgewählten Ort.
+            Beim Einbetten können die Koordinaten fest übernommen werden.
+          </p>
+
+          <div id="widgetLocationText"></div>
+        </div>
+
+        <div class="settings-section">
+          <h3 class="settings-title">
+            Anzahl der Tage
+          </h3>
+
+          <div class="range-row">
+            <input
+              id="widgetDays"
+              type="range"
+              min="1"
+              max="7"
+              step="1"
+              value="4"
+            >
+
+            <output
+              id="widgetDaysOutput"
+              class="range-output">
+              4
+            </output>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h3 class="settings-title">
+            Darstellung
+          </h3>
+
+          <div
+            id="themeSegment"
+            class="segmented">
+
+            <button
+              class="segment-button active"
+              data-theme="light"
+              type="button">
+              Hell
+            </button>
+
+            <button
+              class="segment-button"
+              data-theme="dark"
+              type="button">
+              Dunkel
+            </button>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h3 class="settings-title">
+            Parameter
+          </h3>
+
+          <p class="settings-description">
+            Wählen Sie die Informationen aus, die im Widget erscheinen sollen.
+          </p>
+
+          <div class="option-grid">
+            <label class="check-row">
+              <input
+                class="widget-option"
+                type="checkbox"
+                value="icon"
+                checked>
+              Piktogramm
+            </label>
+
+            <label class="check-row">
+              <input
+                class="widget-option"
+                type="checkbox"
+                value="max"
+                checked>
+              Temperatur max.
+            </label>
+
+            <label class="check-row">
+              <input
+                class="widget-option"
+                type="checkbox"
+                value="min"
+                checked>
+              Temperatur min.
+            </label>
+
+            <label class="check-row">
+              <input
+                class="widget-option"
+                type="checkbox"
+                value="wind"
+                checked>
+              Windgeschwindigkeit
+            </label>
+
+            <label class="check-row">
+              <input
+                class="widget-option"
+                type="checkbox"
+                value="gust"
+                checked>
+              Windböen
+            </label>
+
+            <label class="check-row">
+              <input
+                class="widget-option"
+                type="checkbox"
+                value="direction"
+                checked>
+              Windrichtung
+            </label>
+
+            <label class="check-row">
+              <input
+                class="widget-option"
+                type="checkbox"
+                value="rain"
+                checked>
+              Niederschlag
+            </label>
+
+            <label class="check-row">
+              <input
+                class="widget-option"
+                type="checkbox"
+                value="probability"
+                checked>
+              Niederschlagswahrscheinlichkeit
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h3 class="settings-title">
+            Einbettungscode
+          </h3>
+
+          <textarea
+            id="embedCode"
+            class="embed-area"
+            readonly>
+          </textarea>
+
+          <button
+            id="copyEmbedButton"
+            class="control-button copy-button"
+            type="button">
+            Code kopieren
+          </button>
+        </div>
+
+      </section>
+    </div>
+  </div>
+</div>
 
 <script>
 "use strict";
@@ -415,10 +1580,88 @@ svg{
 const $ = id => document.getElementById(id);
 const SVG_NS = "http://www.w3.org/2000/svg";
 const KMH_PER_KNOT = 1.852;
+const NUMBER_OF_DAYS = 14;
 
 let selectedPlace = "";
 let searchTimer = null;
-let currentDays = null;
+let currentForecast = null;
+let current14Days = null;
+let current5Days = null;
+
+let widgetTheme = "light";
+
+let dayWidth = 98;
+let axisWidth = 58;
+let rightSpace = 22;
+let plotWidth = dayWidth * NUMBER_OF_DAYS;
+let canvasWidth =
+  axisWidth +
+  plotWidth +
+  rightSpace;
+
+const ENSEMBLE_MODELS = [
+  {
+    id:"dwd_icon_eps_ensemble_mean_d2",
+    label:"ICON-D2-EPS",
+    family:"d2"
+  },
+  {
+    id:"dwd_icon_eps_ensemble_mean_eu",
+    label:"ICON-EU-EPS",
+    family:"eu"
+  },
+  {
+    id:"dwd_icon_eps_ensemble_mean_seamless",
+    label:"ICON-EPS Seamless",
+    family:"seamless"
+  },
+  {
+    id:"ecmwf_ifs025_ensemble_mean",
+    label:"ECMWF IFS-ENS",
+    family:"ecmwf"
+  },
+  {
+    id:"ecmwf_aifs025_ensemble_mean",
+    label:"ECMWF AIFS-ENS",
+    family:"aifs"
+  },
+  {
+    id:"gfs025_ensemble_mean",
+    label:"GFS-ENS",
+    family:"gfs"
+  }
+];
+
+function readLayout(){
+  const styles =
+    getComputedStyle(
+      document.documentElement
+    );
+
+  dayWidth =
+    parseFloat(
+      styles.getPropertyValue("--day-width")
+    ) || 98;
+
+  axisWidth =
+    parseFloat(
+      styles.getPropertyValue("--axis-width")
+    ) || 58;
+
+  rightSpace =
+    parseFloat(
+      styles.getPropertyValue("--right-space")
+    ) || 22;
+
+  plotWidth =
+    dayWidth *
+    NUMBER_OF_DAYS;
+
+  canvasWidth =
+    axisWidth +
+    plotWidth +
+    rightSpace;
+}
 
 function svgElement(name,attributes={}){
   const element =
@@ -441,7 +1684,11 @@ function svgElement(name,attributes={}){
 
 function setStatus(text,error=false){
   $("status").textContent = text;
-  $("status").classList.toggle("error",error);
+
+  $("status").classList.toggle(
+    "error",
+    error
+  );
 }
 
 function coordinates(){
@@ -456,7 +1703,9 @@ function coordinates(){
     latitude < -90 ||
     latitude > 90
   ){
-    throw new Error("Ungültiger Breitengrad.");
+    throw new Error(
+      "Ungültiger Breitengrad."
+    );
   }
 
   if(
@@ -464,7 +1713,9 @@ function coordinates(){
     longitude < -180 ||
     longitude > 180
   ){
-    throw new Error("Ungültiger Längengrad.");
+    throw new Error(
+      "Ungültiger Längengrad."
+    );
   }
 
   return {
@@ -473,7 +1724,32 @@ function coordinates(){
   };
 }
 
-function forecastUrl(){
+function formatCoordinate(
+  value,
+  positive,
+  negative
+){
+  return (
+    `${Math.abs(value).toFixed(2)}°` +
+    `${value >= 0 ? positive : negative}`
+  );
+}
+
+function formatShortDate(date){
+  return (
+    `${date.getDate()}.` +
+    `${date.getMonth() + 1}.`
+  );
+}
+
+function formatChartDate(date){
+  return (
+    `${String(date.getDate()).padStart(2,"0")}.` +
+    `${String(date.getMonth() + 1).padStart(2,"0")}.`
+  );
+}
+
+function forecastUrl(days=14){
   const {
     latitude,
     longitude
@@ -484,8 +1760,19 @@ function forecastUrl(){
       latitude:String(latitude),
       longitude:String(longitude),
       timezone:"auto",
-      forecast_days:"5",
+      forecast_days:String(days),
       models:"best_match",
+
+      daily:[
+        "weather_code",
+        "temperature_2m_max",
+        "temperature_2m_min",
+        "precipitation_sum",
+        "precipitation_probability_max",
+        "wind_speed_10m_max",
+        "wind_gusts_10m_max",
+        "wind_direction_10m_dominant"
+      ].join(","),
 
       hourly:[
         "temperature_2m",
@@ -506,25 +1793,54 @@ function forecastUrl(){
   );
 }
 
-function geocodingUrl(query){
+function ensembleUrl(model){
+  const {
+    latitude,
+    longitude
+  } = coordinates();
+
   const parameters =
+    new URLSearchParams({
+      latitude:String(latitude),
+      longitude:String(longitude),
+      timezone:"auto",
+      forecast_days:"14",
+      models:model,
+
+      hourly:[
+        "temperature_2m",
+        "temperature_2m_spread",
+        "precipitation",
+        "precipitation_spread"
+      ].join(",")
+    });
+
+  return (
+    "https://ensemble-api.open-meteo.com/v1/ensemble?" +
+    parameters.toString()
+  );
+}
+
+function geocodingUrl(query){
+  return (
+    "https://geocoding-api.open-meteo.com/v1/search?" +
     new URLSearchParams({
       name:query,
       count:"10",
       language:"de",
       format:"json"
-    });
-
-  return (
-    "https://geocoding-api.open-meteo.com/v1/search?" +
-    parameters.toString()
+    }).toString()
   );
 }
 
 async function fetchJson(url,label){
-  const response = await fetch(url,{
-    cache:"no-store"
-  });
+  const response =
+    await fetch(
+      url,
+      {
+        cache:"no-store"
+      }
+    );
 
   if(!response.ok){
     let reason = "";
@@ -564,11 +1880,7 @@ function weatherIcon(code,isDay=true){
     return "🌫️";
   }
 
-  if([51,53,55,56,57].includes(code)){
-    return "🌦️";
-  }
-
-  if(code === 80){
+  if([51,53,55,56,57,80].includes(code)){
     return "🌦️";
   }
 
@@ -587,74 +1899,826 @@ function weatherIcon(code,isDay=true){
   return "❔";
 }
 
-function buildFiveDayData(forecast){
-  const hourly = forecast.hourly || {};
-  const result = [];
+function weatherSeverity(code){
+  if([95,96,99].includes(code)) return 9;
+  if([82,86,65,67,75].includes(code)) return 8;
+  if([80,81,85,61,63,66,71,73].includes(code)) return 7;
+  if([51,53,55,56,57,77].includes(code)) return 6;
+  if([45,48].includes(code)) return 5;
+  if(code === 3) return 4;
+  if(code === 2) return 3;
+  if(code === 1) return 2;
+  if(code === 0) return 1;
 
-  (hourly.time || []).forEach((time,index)=>{
-    const date = time.slice(0,10);
-
-    if(
-      !result.length ||
-      result.at(-1).date !== date
-    ){
-      result.push({
-        date,
-        hours:[]
-      });
-    }
-
-    result.at(-1).hours.push({
-      time,
-
-      hour:Number(
-        time.slice(11,13)
-      ),
-
-      temperature:
-        hourly.temperature_2m?.[index],
-
-      weatherCode:
-        hourly.weather_code?.[index] ?? -1,
-
-      isDay:
-        Number(hourly.is_day?.[index]) === 1,
-
-      rain:
-        hourly.precipitation?.[index] ?? 0,
-
-      rainProbability:
-        hourly
-          .precipitation_probability
-          ?.[index] ?? 0,
-
-      cloud:
-        hourly.cloud_cover?.[index] ?? 0,
-
-      windKnots:
-        (
-          hourly.wind_speed_10m?.[index] ?? 0
-        ) /
-        KMH_PER_KNOT,
-
-      gustKnots:
-        (
-          hourly.wind_gusts_10m?.[index] ?? 0
-        ) /
-        KMH_PER_KNOT,
-
-      windDirectionFrom:
-        hourly.wind_direction_10m?.[index] ?? 0
-    });
-  });
-
-  return result.slice(0,5);
+  return 0;
 }
 
-function flattenHours(days){
-  return days.flatMap(
-    day=>day.hours
+function isWetWeather(code){
+  return [
+    51,53,55,56,57,
+    61,63,65,66,67,
+    71,73,75,77,
+    80,81,82,85,86,
+    95,96,99
+  ].includes(code);
+}
+
+function representativeWeatherCode(points){
+  if(!points.length){
+    return -1;
+  }
+
+  const scores = new Map();
+
+  points.forEach(point=>{
+    const current =
+      scores.get(point.code) || {
+        count:0,
+        score:0
+      };
+
+    current.count += 1;
+
+    current.score +=
+      weatherSeverity(point.code) +
+      Math.min(
+        2.4,
+        (point.precipitation || 0) * 1.7
+      ) +
+      Math.min(
+        1.5,
+        (point.probability || 0) / 65
+      );
+
+    scores.set(
+      point.code,
+      current
+    );
+  });
+
+  return [...scores.entries()]
+    .sort((a,b)=>{
+      const scoreA =
+        a[1].score +
+        a[1].count * .42;
+
+      const scoreB =
+        b[1].score +
+        b[1].count * .42;
+
+      return scoreB - scoreA;
+    })[0][0];
+}
+
+function weatherIconsByDay(forecast){
+  const grouped = new Map();
+  const hourly = forecast.hourly || {};
+
+  (hourly.time || []).forEach(
+    (time,index)=>{
+      const date =
+        time.slice(0,10);
+
+      if(!grouped.has(date)){
+        grouped.set(
+          date,
+          {
+            day:[],
+            night:[]
+          }
+        );
+      }
+
+      const point = {
+        code:
+          hourly.weather_code?.[index] ?? -1,
+
+        probability:
+          hourly
+            .precipitation_probability
+            ?.[index] ?? 0,
+
+        precipitation:
+          hourly.precipitation?.[index] ?? 0
+      };
+
+      if(
+        Number(
+          hourly.is_day?.[index]
+        ) === 1
+      ){
+        grouped
+          .get(date)
+          .day
+          .push(point);
+      }else{
+        grouped
+          .get(date)
+          .night
+          .push(point);
+      }
+    }
   );
+
+  const result = new Map();
+
+  grouped.forEach(
+    (period,date)=>{
+      const midpoint =
+        Math.ceil(
+          period.day.length / 2
+        );
+
+      const firstHalf =
+        period.day.slice(
+          0,
+          midpoint
+        );
+
+      const secondHalf =
+        period.day.slice(
+          midpoint
+        );
+
+      const firstCode =
+        representativeWeatherCode(
+          firstHalf.length
+            ? firstHalf
+            : period.day
+        );
+
+      const secondCode =
+        representativeWeatherCode(
+          secondHalf.length
+            ? secondHalf
+            : period.day
+        );
+
+      const showSecond =
+        firstCode !== secondCode &&
+        (
+          Math.abs(
+            weatherSeverity(firstCode) -
+            weatherSeverity(secondCode)
+          ) >= 2 ||
+          isWetWeather(firstCode) !==
+          isWetWeather(secondCode)
+        );
+
+      result.set(
+        date,
+        {
+          firstCode,
+          secondCode,
+          showSecond,
+
+          nightCode:
+            representativeWeatherCode(
+              period.night
+            )
+        }
+      );
+    }
+  );
+
+  return result;
+}
+
+function dailyEnsembleData(ensemble){
+  const grouped = new Map();
+  const hourly = ensemble.data.hourly || {};
+
+  (hourly.time || []).forEach(
+    (time,index)=>{
+      const temperatureMean =
+        hourly.temperature_2m?.[index];
+
+      const temperatureSpread =
+        hourly
+          .temperature_2m_spread
+          ?.[index];
+
+      if(
+        !Number.isFinite(temperatureMean) ||
+        !Number.isFinite(temperatureSpread)
+      ){
+        return;
+      }
+
+      const date =
+        time.slice(0,10);
+
+      if(!grouped.has(date)){
+        grouped.set(date,[]);
+      }
+
+      grouped.get(date).push({
+        temperatureMean,
+        temperatureSpread,
+
+        precipitationMean:
+          Number.isFinite(
+            hourly.precipitation?.[index]
+          )
+            ? Math.max(
+                0,
+                hourly.precipitation[index]
+              )
+            : 0,
+
+        precipitationSpread:
+          Number.isFinite(
+            hourly
+              .precipitation_spread
+              ?.[index]
+          )
+            ? Math.max(
+                0,
+                hourly.precipitation_spread[index]
+              )
+            : 0
+      });
+    }
+  );
+
+  const result = new Map();
+
+  grouped.forEach(
+    (hours,date)=>{
+      const maximum =
+        hours.reduce(
+          (best,current)=>
+            current.temperatureMean >
+            best.temperatureMean
+              ? current
+              : best
+        );
+
+      const minimum =
+        hours.reduce(
+          (best,current)=>
+            current.temperatureMean <
+            best.temperatureMean
+              ? current
+              : best
+        );
+
+      const rainMean =
+        hours.reduce(
+          (sum,hour)=>
+            sum +
+            hour.precipitationMean,
+          0
+        );
+
+      const rainSpread =
+        Math.sqrt(
+          hours.reduce(
+            (sum,hour)=>
+              sum +
+              Math.pow(
+                hour.precipitationSpread,
+                2
+              ),
+            0
+          )
+        ) *
+        1.22;
+
+      result.set(
+        date,
+        {
+          highMean:
+            maximum.temperatureMean,
+
+          highSpread:
+            maximum.temperatureSpread,
+
+          lowMean:
+            minimum.temperatureMean,
+
+          lowSpread:
+            minimum.temperatureSpread,
+
+          rainMean,
+          rainSpread,
+
+          family:
+            ensemble.definition.family,
+
+          label:
+            ensemble.definition.label
+        }
+      );
+    }
+  );
+
+  return result;
+}
+
+function modelWeight(family,dayIndex){
+  switch(family){
+    case "d2":
+      if(dayIndex <= 1) return 8;
+      if(dayIndex === 2) return 1.5;
+      return 0;
+
+    case "eu":
+      if(dayIndex <= 1) return 4.5;
+      if(dayIndex === 2) return 6;
+      if(dayIndex === 3) return 5.5;
+      if(dayIndex === 4) return 4.5;
+      if(dayIndex === 5) return 2;
+      return 0;
+
+    case "seamless":
+      if(dayIndex <= 4) return 3;
+      if(dayIndex <= 6) return 2;
+      return .5;
+
+    case "ecmwf":
+      if(dayIndex <= 1) return 1.2;
+      if(dayIndex <= 3) return 2.2;
+      if(dayIndex <= 5) return 3.7;
+      if(dayIndex <= 9) return 5;
+      return 5.5;
+
+    case "aifs":
+      if(dayIndex <= 1) return .8;
+      if(dayIndex <= 3) return 1.6;
+      if(dayIndex <= 5) return 2.7;
+      if(dayIndex <= 9) return 4;
+      return 4.8;
+
+    case "gfs":
+      if(dayIndex <= 3) return 1;
+      if(dayIndex <= 6) return 2;
+      return 3;
+
+    default:
+      return 1;
+  }
+}
+
+function combineEnsembles(
+  entries,
+  meanKey,
+  spreadKey,
+  dayIndex
+){
+  const valid = entries
+    .map(entry=>({
+      entry,
+
+      weight:modelWeight(
+        entry.family,
+        dayIndex
+      )
+    }))
+    .filter(item=>
+      item.weight > 0 &&
+      Number.isFinite(
+        item.entry?.[meanKey]
+      ) &&
+      Number.isFinite(
+        item.entry?.[spreadKey]
+      )
+    );
+
+  if(!valid.length){
+    return null;
+  }
+
+  const weightSum =
+    valid.reduce(
+      (sum,item)=>
+        sum + item.weight,
+      0
+    );
+
+  const mean =
+    valid.reduce(
+      (sum,item)=>
+        sum +
+        item.entry[meanKey] *
+        item.weight,
+      0
+    ) /
+    weightSum;
+
+  const variance =
+    valid.reduce(
+      (sum,item)=>{
+        const internalVariance =
+          Math.pow(
+            item.entry[spreadKey],
+            2
+          );
+
+        const modelDifference =
+          item.entry[meanKey] -
+          mean;
+
+        return (
+          sum +
+          item.weight *
+          (
+            internalVariance +
+            Math.pow(
+              modelDifference,
+              2
+            )
+          )
+        );
+      },
+      0
+    ) /
+    weightSum;
+
+  return {
+    mean,
+
+    spread:
+      Math.sqrt(
+        Math.max(
+          .01,
+          variance
+        )
+      ),
+
+    labels:
+      valid.map(
+        item=>item.entry.label
+      )
+  };
+}
+
+function mergeForecastAndEnsembles(
+  forecast,
+  ensembles
+){
+  const iconMap =
+    weatherIconsByDay(
+      forecast
+    );
+
+  const ensembleMaps =
+    ensembles.map(
+      dailyEnsembleData
+    );
+
+  const daily =
+    forecast.daily;
+
+  return daily.time.map(
+    (date,index)=>{
+      const entries =
+        ensembleMaps
+          .map(map=>map.get(date))
+          .filter(Boolean);
+
+      const high =
+        combineEnsembles(
+          entries,
+          "highMean",
+          "highSpread",
+          index
+        );
+
+      const low =
+        combineEnsembles(
+          entries,
+          "lowMean",
+          "lowSpread",
+          index
+        );
+
+      const rainEnsemble =
+        combineEnsembles(
+          entries,
+          "rainMean",
+          "rainSpread",
+          index
+        );
+
+      const maximum =
+        daily.temperature_2m_max[index];
+
+      const minimum =
+        daily.temperature_2m_min[index];
+
+      const rain =
+        Math.max(
+          0,
+          daily
+            .precipitation_sum
+            ?.[index] ?? 0
+        );
+
+      const highMean =
+        high?.mean ?? maximum;
+
+      const highSpread =
+        Math.max(
+          .15,
+          high?.spread ?? .15
+        );
+
+      const lowMean =
+        low?.mean ?? minimum;
+
+      const lowSpread =
+        Math.max(
+          .15,
+          low?.spread ?? .15
+        );
+
+      const rainMean =
+        rainEnsemble?.mean ?? rain;
+
+      const rainSpread =
+        Math.max(
+          .05,
+          rainEnsemble?.spread ?? .05
+        );
+
+      const weather =
+        iconMap.get(date) || {
+          firstCode:
+            daily.weather_code?.[index] ?? -1,
+
+          secondCode:
+            daily.weather_code?.[index] ?? -1,
+
+          showSecond:false,
+
+          nightCode:
+            daily.weather_code?.[index] ?? -1
+        };
+
+      return {
+        date,
+
+        dateObject:
+          new Date(
+            date +
+            "T12:00:00"
+          ),
+
+        firstCode:
+          weather.firstCode,
+
+        secondCode:
+          weather.secondCode,
+
+        showSecond:
+          weather.showSecond,
+
+        nightCode:
+          weather.nightCode,
+
+        maximum,
+        minimum,
+
+        highInnerLow:
+          highMean -
+          highSpread,
+
+        highInnerHigh:
+          highMean +
+          highSpread,
+
+        highOuterLow:
+          highMean -
+          1.96 *
+          highSpread,
+
+        highOuterHigh:
+          highMean +
+          1.96 *
+          highSpread,
+
+        lowInnerLow:
+          lowMean -
+          lowSpread,
+
+        lowInnerHigh:
+          lowMean +
+          lowSpread,
+
+        lowOuterLow:
+          lowMean -
+          1.96 *
+          lowSpread,
+
+        lowOuterHigh:
+          lowMean +
+          1.96 *
+          lowSpread,
+
+        rain,
+
+        rainRangeLow:
+          Math.max(
+            0,
+            rainMean -
+            1.96 *
+            rainSpread
+          ),
+
+        rainRangeHigh:
+          Math.max(
+            rain,
+            rainMean +
+            1.96 *
+            rainSpread
+          ),
+
+        probability:
+          daily
+            .precipitation_probability_max
+            ?.[index] ?? 0,
+
+        confidence:
+          Math.max(
+            5,
+            Math.round(
+              98 -
+              index *
+              1.7 -
+              Math.min(
+                62,
+                Math.max(
+                  highSpread,
+                  lowSpread
+                ) *
+                11
+              )
+            )
+          ),
+
+        labels:[
+          ...(high?.labels || []),
+          ...(low?.labels || []),
+          ...(rainEnsemble?.labels || [])
+        ].filter(
+          (value,index,array)=>
+            array.indexOf(value) === index
+        )
+      };
+    }
+  );
+}
+
+function confidenceColor(value){
+  if(value >= 80) return "#66bc39";
+  if(value >= 60) return "#d6da3e";
+  if(value >= 40) return "#eee34d";
+  if(value >= 25) return "#edb03a";
+
+  return "#f23a3a";
+}
+
+function probabilityColor(value){
+  const lightness =
+    86 -
+    Math.min(
+      59,
+      value * .57
+    );
+
+  return (
+    `hsl(210 88% ${lightness}%)`
+  );
+}
+
+function render14DayHeaders(days){
+  const container =
+    $("days14");
+
+  container.replaceChildren();
+
+  days.forEach(day=>{
+    const element =
+      document.createElement("div");
+
+    element.className =
+      "day-card" +
+      (
+        [0,6].includes(
+          day.dateObject.getDay()
+        )
+          ? " weekend"
+          : ""
+      );
+
+    const secondaryIcon =
+      day.showSecond
+        ? `
+          <span class="change-arrow">›</span>
+
+          <span class="day-icon secondary">
+            ${weatherIcon(
+              day.secondCode,
+              true
+            )}
+          </span>
+        `
+        : "";
+
+    element.innerHTML = `
+      <div class="weekday">
+        ${day.dateObject.toLocaleDateString(
+          "de-DE",
+          {weekday:"short"}
+        )}
+      </div>
+
+      <div class="date">
+        ${formatChartDate(
+          day.dateObject
+        )}
+      </div>
+
+      <div class="weather-icons">
+        <div class="day-icons">
+          <span class="day-icon">
+            ${weatherIcon(
+              day.firstCode,
+              true
+            )}
+          </span>
+
+          ${secondaryIcon}
+        </div>
+
+        <div class="night-block">
+          <div class="night-label">
+            Nacht
+          </div>
+
+          <div class="night-icon">
+            ${weatherIcon(
+              day.nightCode,
+              false
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div class="maximum">
+        ${Math.round(day.maximum)}°
+      </div>
+
+      <div class="minimum">
+        ${Math.round(day.minimum)}°
+      </div>
+    `;
+
+    container.appendChild(
+      element
+    );
+  });
+}
+
+function renderConfidence(days){
+  const container =
+    $("confidence14");
+
+  container.replaceChildren();
+
+  days.forEach(day=>{
+    const element =
+      document.createElement("div");
+
+    element.className =
+      "confidence-cell";
+
+    element.title =
+      day.labels.join(", ");
+
+    element.innerHTML = `
+      <div class="confidence-track">
+        <div
+          class="confidence-fill"
+          style="
+            width:${day.confidence}%;
+            background:${confidenceColor(
+              day.confidence
+            )}
+          ">
+        </div>
+      </div>
+
+      <div class="confidence-value">
+        ${day.confidence}%
+      </div>
+    `;
+
+    container.appendChild(
+      element
+    );
+  });
 }
 
 function pointPath(points){
@@ -670,48 +2734,646 @@ function pointPath(points){
     .join(" ");
 }
 
-function prepareChart(
-  svg,
-  height,
-  top,
-  bottom
-){
+function bandPath(upper,lower){
+  return (
+    pointPath(upper) +
+    " " +
+    lower
+      .slice()
+      .reverse()
+      .map(point=>{
+        return (
+          "L" +
+          point[0].toFixed(2) +
+          "," +
+          point[1].toFixed(2)
+        );
+      })
+      .join(" ") +
+    " Z"
+  );
+}
+
+function dayCenter(index){
+  return (
+    axisWidth +
+    (index + .5) *
+    dayWidth
+  );
+}
+
+function dayBoundary(index){
+  return (
+    axisWidth +
+    index *
+    dayWidth
+  );
+}
+
+function drawTemperature14(days){
+  readLayout();
+
+  const svg =
+    $("temperature14");
+
   svg.replaceChildren();
+
+  const height =
+    window.innerWidth <= 700
+      ? 290
+      : 350;
+
+  const top = 18;
+  const bottom = 38;
+
+  const graphHeight =
+    height -
+    top -
+    bottom;
+
+  svg.setAttribute(
+    "viewBox",
+    `0 0 ${canvasWidth} ${height}`
+  );
+
+  const values = [
+    ...days.map(
+      day=>day.highOuterHigh
+    ),
+
+    ...days.map(
+      day=>day.lowOuterLow
+    ),
+
+    ...days.map(
+      day=>day.maximum
+    ),
+
+    ...days.map(
+      day=>day.minimum
+    )
+  ];
+
+  let minimum =
+    Math.floor(
+      Math.min(...values) - 1
+    );
+
+  let maximum =
+    Math.ceil(
+      Math.max(...values) + 1
+    );
+
+  if(maximum - minimum < 10){
+    maximum =
+      minimum + 10;
+  }
+
+  const y = value=>{
+    return (
+      top +
+      (maximum - value) /
+      (maximum - minimum) *
+      graphHeight
+    );
+  };
 
   svg.appendChild(
     svgElement("rect",{
-      x:80,
+      x:axisWidth,
       y:top,
-      width:1190,
-      height:
-        height -
-        top -
-        bottom,
-
+      width:plotWidth,
+      height:graphHeight,
       fill:"#fafafa",
       stroke:"#333"
     })
   );
 
-  for(let day = 0; day <= 5; day++){
-    const x =
-      80 +
-      day *
-      238;
+  const step =
+    maximum - minimum > 18
+      ? 5
+      : 2;
 
+  for(
+    let value =
+      Math.ceil(
+        minimum / step
+      ) *
+      step;
+
+    value <= maximum;
+
+    value += step
+  ){
     svg.appendChild(
       svgElement("line",{
-        x1:x,
+        x1:axisWidth,
+        y1:y(value),
+        x2:
+          axisWidth +
+          plotWidth,
+        y2:y(value),
+        stroke:"#b8b8b8"
+      })
+    );
+
+    const label =
+      svgElement("text",{
+        x:axisWidth - 6,
+        y:y(value) + 4,
+        "text-anchor":"end",
+        "font-size":14
+      });
+
+    label.textContent =
+      value;
+
+    svg.appendChild(
+      label
+    );
+  }
+
+  for(
+    let index = 0;
+    index <= NUMBER_OF_DAYS;
+    index++
+  ){
+    svg.appendChild(
+      svgElement("line",{
+        x1:dayBoundary(index),
         y1:top,
-        x2:x,
+        x2:dayBoundary(index),
         y2:height - bottom,
-        stroke:"#999"
+        stroke:"#bbc2c8"
       })
     );
   }
+
+  svg.appendChild(
+    svgElement("path",{
+      d:bandPath(
+        days.map(
+          (day,index)=>[
+            dayCenter(index),
+            y(day.highOuterHigh)
+          ]
+        ),
+
+        days.map(
+          (day,index)=>[
+            dayCenter(index),
+            y(day.highOuterLow)
+          ]
+        )
+      ),
+
+      fill:
+        "rgba(238,75,75,.13)"
+    })
+  );
+
+  svg.appendChild(
+    svgElement("path",{
+      d:bandPath(
+        days.map(
+          (day,index)=>[
+            dayCenter(index),
+            y(day.highInnerHigh)
+          ]
+        ),
+
+        days.map(
+          (day,index)=>[
+            dayCenter(index),
+            y(day.highInnerLow)
+          ]
+        )
+      ),
+
+      fill:
+        "rgba(238,75,75,.31)"
+    })
+  );
+
+  svg.appendChild(
+    svgElement("path",{
+      d:bandPath(
+        days.map(
+          (day,index)=>[
+            dayCenter(index),
+            y(day.lowOuterHigh)
+          ]
+        ),
+
+        days.map(
+          (day,index)=>[
+            dayCenter(index),
+            y(day.lowOuterLow)
+          ]
+        )
+      ),
+
+      fill:
+        "rgba(55,128,225,.12)"
+    })
+  );
+
+  svg.appendChild(
+    svgElement("path",{
+      d:bandPath(
+        days.map(
+          (day,index)=>[
+            dayCenter(index),
+            y(day.lowInnerHigh)
+          ]
+        ),
+
+        days.map(
+          (day,index)=>[
+            dayCenter(index),
+            y(day.lowInnerLow)
+          ]
+        )
+      ),
+
+      fill:
+        "rgba(55,128,225,.28)"
+    })
+  );
+
+  svg.appendChild(
+    svgElement("path",{
+      d:pointPath(
+        days.map(
+          (day,index)=>[
+            dayCenter(index),
+            y(day.maximum)
+          ]
+        )
+      ),
+
+      fill:"none",
+      stroke:"#ee1717",
+      "stroke-width":5,
+      "stroke-linejoin":"round",
+      "stroke-linecap":"round"
+    })
+  );
+
+  svg.appendChild(
+    svgElement("path",{
+      d:pointPath(
+        days.map(
+          (day,index)=>[
+            dayCenter(index),
+            y(day.minimum)
+          ]
+        )
+      ),
+
+      fill:"none",
+      stroke:"#1688ee",
+      "stroke-width":5,
+      "stroke-linejoin":"round",
+      "stroke-linecap":"round"
+    })
+  );
 }
 
-function renderDayHeaders(days){
+function drawRain14(days){
+  readLayout();
+
+  const svg =
+    $("rain14");
+
+  svg.replaceChildren();
+
+  const height =
+    window.innerWidth <= 700
+      ? 290
+      : 335;
+
+  const top = 34;
+  const bottom = 45;
+
+  const graphHeight =
+    height -
+    top -
+    bottom;
+
+  svg.setAttribute(
+    "viewBox",
+    `0 0 ${canvasWidth} ${height}`
+  );
+
+  const maximumValue =
+    Math.max(
+      1,
+      ...days.map(day=>
+        Math.max(
+          day.rain,
+          day.rainRangeHigh
+        )
+      )
+    );
+
+  const axisMaximum =
+    maximumValue <= 2
+      ? 2
+      : maximumValue <= 5
+        ? 5
+        : maximumValue <= 10
+          ? 10
+          : maximumValue <= 20
+            ? 20
+            : Math.ceil(
+                maximumValue / 10
+              ) * 10;
+
+  const y = value=>{
+    return (
+      top +
+      (axisMaximum - value) /
+      axisMaximum *
+      graphHeight
+    );
+  };
+
+  svg.appendChild(
+    svgElement("rect",{
+      x:axisWidth,
+      y:top,
+      width:plotWidth,
+      height:graphHeight,
+      fill:"#fafafa",
+      stroke:"#333"
+    })
+  );
+
+  const step =
+    axisMaximum <= 5
+      ? 1
+      : axisMaximum <= 10
+        ? 2
+        : 5;
+
+  for(
+    let value = 0;
+    value <= axisMaximum;
+    value += step
+  ){
+    svg.appendChild(
+      svgElement("line",{
+        x1:axisWidth,
+        y1:y(value),
+        x2:
+          axisWidth +
+          plotWidth,
+        y2:y(value),
+        stroke:"#b8b8b8"
+      })
+    );
+
+    const label =
+      svgElement("text",{
+        x:axisWidth - 6,
+        y:y(value) + 4,
+        "text-anchor":"end",
+        "font-size":14
+      });
+
+    label.textContent =
+      value;
+
+    svg.appendChild(
+      label
+    );
+  }
+
+  for(
+    let index = 0;
+    index <= NUMBER_OF_DAYS;
+    index++
+  ){
+    svg.appendChild(
+      svgElement("line",{
+        x1:dayBoundary(index),
+        y1:top,
+        x2:dayBoundary(index),
+        y2:height - bottom,
+        stroke:"#bbc2c8"
+      })
+    );
+  }
+
+  days.forEach(
+    (day,index)=>{
+      const x =
+        dayCenter(index);
+
+      const rangeTop =
+        y(day.rainRangeHigh);
+
+      const rangeBottom =
+        y(day.rainRangeLow);
+
+      if(
+        day.rainRangeHigh > .05
+      ){
+        svg.appendChild(
+          svgElement("line",{
+            x1:x,
+            y1:rangeTop,
+            x2:x,
+            y2:rangeBottom,
+            stroke:"#787878",
+            "stroke-width":3
+          })
+        );
+
+        svg.appendChild(
+          svgElement("line",{
+            x1:x - 10,
+            y1:rangeTop,
+            x2:x + 10,
+            y2:rangeTop,
+            stroke:"#787878",
+            "stroke-width":3
+          })
+        );
+
+        svg.appendChild(
+          svgElement("line",{
+            x1:x - 10,
+            y1:rangeBottom,
+            x2:x + 10,
+            y2:rangeBottom,
+            stroke:"#787878",
+            "stroke-width":3
+          })
+        );
+      }
+
+      if(day.rain > .05){
+        svg.appendChild(
+          svgElement("rect",{
+            x:
+              x -
+              dayWidth *
+              .29,
+
+            y:y(day.rain),
+
+            width:
+              dayWidth *
+              .58,
+
+            height:
+              y(0) -
+              y(day.rain),
+
+            fill:"#075ee9"
+          })
+        );
+      }
+
+      const weekday =
+        svgElement("text",{
+          x,
+          y:23,
+          "text-anchor":"middle",
+          "font-size":16
+        });
+
+      weekday.textContent =
+        day.dateObject.toLocaleDateString(
+          "de-DE",
+          {weekday:"short"}
+        );
+
+      svg.appendChild(
+        weekday
+      );
+    }
+  );
+}
+
+function renderProbabilities(days){
+  const container =
+    $("probability14");
+
+  container.replaceChildren();
+
+  days.forEach(day=>{
+    const element =
+      document.createElement("div");
+
+    element.className =
+      "probability";
+
+    element.textContent =
+      `${Math.round(
+        day.probability
+      )}%`;
+
+    element.style.color =
+      probabilityColor(
+        day.probability
+      );
+
+    container.appendChild(
+      element
+    );
+  });
+}
+
+function build5DayData(forecast){
+  const result = [];
+  const hourly =
+    forecast.hourly;
+
+  (hourly.time || []).forEach(
+    (time,index)=>{
+      const date =
+        time.slice(0,10);
+
+      if(
+        !result.length ||
+        result.at(-1).date !== date
+      ){
+        result.push({
+          date,
+          hours:[]
+        });
+      }
+
+      if(result.length > 5){
+        return;
+      }
+
+      result.at(-1).hours.push({
+        time,
+
+        hour:Number(
+          time.slice(11,13)
+        ),
+
+        temperature:
+          hourly.temperature_2m?.[index],
+
+        weatherCode:
+          hourly.weather_code?.[index] ?? -1,
+
+        isDay:
+          Number(
+            hourly.is_day?.[index]
+          ) === 1,
+
+        rain:
+          hourly.precipitation?.[index] ?? 0,
+
+        rainProbability:
+          hourly
+            .precipitation_probability
+            ?.[index] ?? 0,
+
+        cloud:
+          hourly.cloud_cover?.[index] ?? 0,
+
+        windKnots:
+          (
+            hourly
+              .wind_speed_10m
+              ?.[index] ?? 0
+          ) /
+          KMH_PER_KNOT,
+
+        gustKnots:
+          (
+            hourly
+              .wind_gusts_10m
+              ?.[index] ?? 0
+          ) /
+          KMH_PER_KNOT,
+
+        directionFrom:
+          hourly
+            .wind_direction_10m
+            ?.[index] ?? 0
+      });
+    }
+  );
+
+  return result.slice(0,5);
+}
+
+function flattenHours(days){
+  return days.flatMap(
+    day=>day.hours
+  );
+}
+
+function render5DayHeaders(days){
   const container =
     $("detailDays");
 
@@ -730,7 +3392,9 @@ function renderDayHeaders(days){
     element.className =
       "detail-day" +
       (
-        [0,6].includes(date.getDay())
+        [0,6].includes(
+          date.getDay()
+        )
           ? " weekend"
           : ""
       );
@@ -740,18 +3404,61 @@ function renderDayHeaders(days){
         "de-DE",
         {weekday:"long"}
       )}
+
       <br>
-      ${date.toLocaleDateString(
-        "de-DE",
-        {
-          day:"2-digit",
-          month:"2-digit"
-        }
-      )}
+
+      ${formatChartDate(date)}
     `;
 
-    container.appendChild(element);
+    container.appendChild(
+      element
+    );
   });
+}
+
+function prepareDetailChart(
+  svg,
+  height,
+  top,
+  bottom
+){
+  svg.replaceChildren();
+
+  svg.appendChild(
+    svgElement("rect",{
+      x:90,
+      y:top,
+      width:1220,
+      height:
+        height -
+        top -
+        bottom,
+
+      fill:"#fafafa",
+      stroke:"#333"
+    })
+  );
+
+  for(
+    let day = 0;
+    day <= 5;
+    day++
+  ){
+    const x =
+      90 +
+      day *
+      244;
+
+    svg.appendChild(
+      svgElement("line",{
+        x1:x,
+        y1:top,
+        x2:x,
+        y2:height - bottom,
+        stroke:"#9ea7ae"
+      })
+    );
+  }
 }
 
 function drawTimeLabels(
@@ -760,59 +3467,70 @@ function drawTimeLabels(
   x,
   baseline
 ){
-  points.forEach((point,index)=>{
-    if(
-      ![6,12,18].includes(
-        point.hour
-      )
-    ){
-      return;
+  points.forEach(
+    (point,index)=>{
+      if(
+        ![6,12,18].includes(
+          point.hour
+        )
+      ){
+        return;
+      }
+
+      const label =
+        svgElement("text",{
+          x:x(index),
+          y:baseline,
+          "text-anchor":"middle",
+          "font-size":13,
+          fill:"#3c474f"
+        });
+
+      label.textContent =
+        String(
+          point.hour
+        ).padStart(2,"0");
+
+      svg.appendChild(
+        label
+      );
     }
-
-    const label =
-      svgElement("text",{
-        x:x(index),
-        y:baseline,
-        "text-anchor":"middle",
-        "font-size":13,
-        fill:"#333"
-      });
-
-    label.textContent =
-      String(point.hour).padStart(2,"0");
-
-    svg.appendChild(label);
-  });
+  );
 }
 
-function drawTemperature(days){
+function drawDetailTemperature(days){
   const svg =
-    $("temperatureChart");
+    $("detailTemperature");
 
   const points =
     flattenHours(days);
 
-  const height = 330;
-  const top = 66;
-  const bottom = 38;
-  const left = 80;
-  const plotWidth = 1190;
+  const height = 360;
+  const top = 88;
+  const bottom = 39;
+  const left = 90;
+  const chartWidth = 1220;
 
   const graphHeight =
     height -
     top -
     bottom;
 
-  prepareChart(
+  prepareDetailChart(
     svg,
     height,
     top,
     bottom
   );
 
-  const values = points
-    .map(point=>point.temperature)
-    .filter(Number.isFinite);
+  const values =
+    points
+      .map(
+        point=>point.temperature
+      )
+      .filter(
+        Number.isFinite
+      );
 
   let minimum =
     Math.floor(
@@ -825,7 +3543,8 @@ function drawTemperature(days){
     );
 
   if(maximum - minimum < 10){
-    maximum = minimum + 10;
+    maximum =
+      minimum + 10;
   }
 
   const x = index=>{
@@ -833,7 +3552,7 @@ function drawTemperature(days){
       left +
       index /
       (points.length - 1) *
-      plotWidth
+      chartWidth
     );
   };
 
@@ -846,7 +3565,7 @@ function drawTemperature(days){
     );
   };
 
-  const temperatureStep =
+  const step =
     maximum - minimum > 24
       ? 6
       : 3;
@@ -854,22 +3573,23 @@ function drawTemperature(days){
   for(
     let value =
       Math.ceil(
-        minimum /
-        temperatureStep
+        minimum / step
       ) *
-      temperatureStep;
+      step;
 
     value <= maximum;
 
-    value += temperatureStep
+    value += step
   ){
     svg.appendChild(
       svgElement("line",{
         x1:left,
         y1:y(value),
-        x2:left + plotWidth,
+        x2:
+          left +
+          chartWidth,
         y2:y(value),
-        stroke:"#bbb"
+        stroke:"#b8b8b8"
       })
     );
 
@@ -881,41 +3601,54 @@ function drawTemperature(days){
         "font-size":14
       });
 
-    label.textContent = value;
-    svg.appendChild(label);
-  }
-
-  points.forEach((point,index)=>{
-    if(!point.isDay){
-      return;
-    }
-
-    const cellWidth =
-      plotWidth /
-      (points.length - 1);
+    label.textContent =
+      value;
 
     svg.appendChild(
-      svgElement("rect",{
-        x:x(index) - cellWidth / 2,
-        y:top,
-        width:cellWidth,
-        height:graphHeight,
-        fill:"rgba(230,240,120,.24)"
-      })
+      label
     );
-  });
+  }
+
+  points.forEach(
+    (point,index)=>{
+      if(!point.isDay){
+        return;
+      }
+
+      const cellWidth =
+        chartWidth /
+        (points.length - 1);
+
+      svg.appendChild(
+        svgElement("rect",{
+          x:
+            x(index) -
+            cellWidth / 2,
+
+          y:top,
+          width:cellWidth,
+          height:graphHeight,
+
+          fill:
+            "rgba(225,239,111,.25)"
+        })
+      );
+    }
+  );
 
   svg.appendChild(
     svgElement("path",{
       d:pointPath(
-        points.map((point,index)=>[
-          x(index),
-          y(point.temperature)
-        ])
+        points.map(
+          (point,index)=>[
+            x(index),
+            y(point.temperature)
+          ]
+        )
       ),
 
       fill:"none",
-      stroke:"#ed1111",
+      stroke:"#ee1717",
       "stroke-width":4,
       "stroke-linejoin":"round",
       "stroke-linecap":"round"
@@ -923,55 +3656,62 @@ function drawTemperature(days){
   );
 
   /*
-   * Piktogramme alle drei Stunden.
-   * Zwei versetzte Reihen verhindern Überschneidungen.
+   * Wetterpiktogramme alle zwei Stunden.
+   * Vier Reihen verhindern Überlappungen.
    */
-  points.forEach((point,index)=>{
-    if(point.hour % 3 !== 0){
-      return;
-    }
+  points.forEach(
+    (point,index)=>{
+      if(point.hour % 2 !== 0){
+        return;
+      }
 
-    const row =
-      Math.floor(
-        point.hour / 3
-      ) %
-      2;
+      const row =
+        Math.floor(
+          point.hour / 2
+        ) %
+        4;
 
-    const icon =
-      svgElement("text",{
-        x:x(index),
-        y:row === 0 ? 25 : 51,
-        "text-anchor":"middle",
-        "font-size":
+      const icon =
+        svgElement("text",{
+          x:x(index),
+          y:
+            20 +
+            row *
+            19,
+
+          "text-anchor":"middle",
+
+          "font-size":
+            point.isDay
+              ? 18
+              : 13
+        });
+
+      icon.textContent =
+        weatherIcon(
+          point.weatherCode,
           point.isDay
-            ? 19
-            : 14
-      });
+        );
 
-    icon.textContent =
-      weatherIcon(
-        point.weatherCode,
-        point.isDay
+      svg.appendChild(
+        icon
       );
+    }
+  );
 
-    svg.appendChild(icon);
-  });
-
-  /*
-   * Tagesminimum und Tagesmaximum an der Temperaturkurve.
-   */
   let offset = 0;
 
   days.forEach(day=>{
-    const validHours =
-      day.hours.filter(hour=>
-        Number.isFinite(
-          hour.temperature
-        )
+    const valid =
+      day.hours.filter(
+        hour=>
+          Number.isFinite(
+            hour.temperature
+          )
       );
 
     const maximumPoint =
-      validHours.reduce(
+      valid.reduce(
         (best,current)=>
           current.temperature >
           best.temperature
@@ -980,7 +3720,7 @@ function drawTemperature(days){
       );
 
     const minimumPoint =
-      validHours.reduce(
+      valid.reduce(
         (best,current)=>
           current.temperature <
           best.temperature
@@ -1003,7 +3743,12 @@ function drawTemperature(days){
     const maximumLabel =
       svgElement("text",{
         x:x(maximumIndex),
-        y:y(maximumPoint.temperature) - 9,
+        y:
+          y(
+            maximumPoint.temperature
+          ) -
+          9,
+
         "text-anchor":"middle",
         "font-size":16,
         "font-weight":"700",
@@ -1015,12 +3760,19 @@ function drawTemperature(days){
         maximumPoint.temperature
       )}°`;
 
-    svg.appendChild(maximumLabel);
+    svg.appendChild(
+      maximumLabel
+    );
 
     const minimumLabel =
       svgElement("text",{
         x:x(minimumIndex),
-        y:y(minimumPoint.temperature) + 20,
+        y:
+          y(
+            minimumPoint.temperature
+          ) +
+          20,
+
         "text-anchor":"middle",
         "font-size":16,
         "font-weight":"700",
@@ -1032,9 +3784,12 @@ function drawTemperature(days){
         minimumPoint.temperature
       )}°`;
 
-    svg.appendChild(minimumLabel);
+    svg.appendChild(
+      minimumLabel
+    );
 
-    offset += day.hours.length;
+    offset +=
+      day.hours.length;
   });
 
   drawTimeLabels(
@@ -1045,49 +3800,50 @@ function drawTemperature(days){
   );
 }
 
-function drawCloudRain(days){
+function drawDetailCloudRain(days){
   const svg =
-    $("cloudRainChart");
+    $("detailCloudRain");
 
   const points =
     flattenHours(days);
 
-  const height = 280;
+  const height = 290;
   const top = 20;
-  const bottom = 38;
-  const left = 80;
-  const plotWidth = 1190;
+  const bottom = 39;
+  const left = 90;
+  const chartWidth = 1220;
 
   const graphHeight =
     height -
     top -
     bottom;
 
-  prepareChart(
+  prepareDetailChart(
     svg,
     height,
     top,
     bottom
   );
 
-  const maximumRain = Math.max(
-    5,
-    Math.ceil(
-      Math.max(
-        0,
-        ...points.map(
-          point=>point.rain
+  const maximumRain =
+    Math.max(
+      5,
+      Math.ceil(
+        Math.max(
+          0,
+          ...points.map(
+            point=>point.rain
+          )
         )
       )
-    )
-  );
+    );
 
   const x = index=>{
     return (
       left +
       index /
       (points.length - 1) *
-      plotWidth
+      chartWidth
     );
   };
 
@@ -1115,7 +3871,7 @@ function drawCloudRain(days){
     );
   };
 
-  const rainStep =
+  const step =
     maximumRain <= 5
       ? 1
       : maximumRain <= 10
@@ -1125,15 +3881,17 @@ function drawCloudRain(days){
   for(
     let value = 0;
     value <= maximumRain;
-    value += rainStep
+    value += step
   ){
     svg.appendChild(
       svgElement("line",{
         x1:left,
         y1:rainY(value),
-        x2:left + plotWidth,
+        x2:
+          left +
+          chartWidth,
         y2:rainY(value),
-        stroke:"#bbb"
+        stroke:"#b8b8b8"
       })
     );
 
@@ -1145,54 +3903,82 @@ function drawCloudRain(days){
         "font-size":14
       });
 
-    label.textContent = value;
-    svg.appendChild(label);
+    label.textContent =
+      value;
+
+    svg.appendChild(
+      label
+    );
   }
 
-  points.forEach((point,index)=>{
-    const barWidth = Math.max(
-      2,
-      plotWidth /
-      points.length *
-      .78
-    );
+  points.forEach(
+    (point,index)=>{
+      const barWidth =
+        Math.max(
+          2,
+          chartWidth /
+          points.length *
+          .78
+        );
 
-    if(point.cloud > 0){
-      svg.appendChild(
-        svgElement("rect",{
-          x:x(index) - barWidth / 2,
-          y:cloudY(point.cloud),
-          width:barWidth,
-          height:
-            cloudY(0) -
-            cloudY(point.cloud),
+      if(point.cloud > 0){
+        svg.appendChild(
+          svgElement("rect",{
+            x:
+              x(index) -
+              barWidth / 2,
 
-          fill:
-            `rgba(85,85,85,${
-              .08 +
-              .72 *
-              point.cloud /
-              100
-            })`
-        })
-      );
+            y:cloudY(
+              point.cloud
+            ),
+
+            width:barWidth,
+
+            height:
+              cloudY(0) -
+              cloudY(
+                point.cloud
+              ),
+
+            fill:
+              `rgba(75,79,83,${
+                .07 +
+                .73 *
+                point.cloud /
+                100
+              })`
+          })
+        );
+      }
+
+      if(point.rain > 0){
+        svg.appendChild(
+          svgElement("rect",{
+            x:
+              x(index) -
+              barWidth *
+              .29,
+
+            y:rainY(
+              point.rain
+            ),
+
+            width:
+              barWidth *
+              .58,
+
+            height:
+              rainY(0) -
+              rainY(
+                point.rain
+              ),
+
+            fill:"#075ee9"
+          })
+        );
+      }
     }
-
-    if(point.rain > 0){
-      svg.appendChild(
-        svgElement("rect",{
-          x:x(index) - barWidth * .29,
-          y:rainY(point.rain),
-          width:barWidth * .58,
-          height:
-            rainY(0) -
-            rainY(point.rain),
-
-          fill:"#1558e8"
-        })
-      );
-    }
-  });
+  );
 
   drawTimeLabels(
     svg,
@@ -1203,14 +3989,12 @@ function drawCloudRain(days){
 }
 
 /*
- * Meteorologische Windfieder:
+ * WMO-Windfieder:
  *
- * Der Mittelpunkt ist der Messort.
- * Der Schaft zeigt zur Herkunftsrichtung des Windes.
- *
+ * Schaft zeigt zur Herkunftsrichtung.
  * 5 kt  = halbe Fieder
  * 10 kt = volle Fieder
- * 50 kt = ausgefülltes Dreieck
+ * 50 kt = Dreieck
  */
 function drawWindBarb(
   svg,
@@ -1237,11 +4021,14 @@ function drawWindBarb(
       })
     );
 
-    svg.appendChild(group);
+    svg.appendChild(
+      group
+    );
+
     return;
   }
 
-  const shaftLength = 26;
+  const shaftLength = 27;
 
   group.appendChild(
     svgElement("line",{
@@ -1286,7 +4073,10 @@ function drawWindBarb(
         x1:0,
         y1:position,
         x2:10,
-        y2:position + 5,
+        y2:
+          position +
+          5,
+
         stroke:"#111",
         "stroke-width":1.7,
         "stroke-linecap":"round"
@@ -1302,8 +4092,11 @@ function drawWindBarb(
       svgElement("line",{
         x1:0,
         y1:position,
-        x2:5.8,
-        y2:position + 2.9,
+        x2:5.7,
+        y2:
+          position +
+          2.85,
+
         stroke:"#111",
         "stroke-width":1.7,
         "stroke-linecap":"round"
@@ -1311,53 +4104,57 @@ function drawWindBarb(
     );
   }
 
-  svg.appendChild(group);
+  svg.appendChild(
+    group
+  );
 }
 
-function drawWind(days){
+function drawDetailWind(days){
   const svg =
-    $("windChart");
+    $("detailWind");
 
   const points =
     flattenHours(days);
 
-  const height = 310;
-  const top = 72;
-  const bottom = 38;
-  const left = 80;
-  const plotWidth = 1190;
+  const height = 325;
+  const top = 79;
+  const bottom = 39;
+  const left = 90;
+  const chartWidth = 1220;
 
   const graphHeight =
     height -
     top -
     bottom;
 
-  prepareChart(
+  prepareDetailChart(
     svg,
     height,
     top,
     bottom
   );
 
-  const maximum = Math.max(
-    20,
-    Math.ceil(
-      Math.max(
-        ...points.map(
-          point=>point.gustKnots
-        )
-      ) /
+  const maximum =
+    Math.max(
+      20,
+      Math.ceil(
+        Math.max(
+          ...points.map(
+            point=>
+              point.gustKnots
+          )
+        ) /
+        5
+      ) *
       5
-    ) *
-    5
-  );
+    );
 
   const x = index=>{
     return (
       left +
       index /
       (points.length - 1) *
-      plotWidth
+      chartWidth
     );
   };
 
@@ -1379,9 +4176,11 @@ function drawWind(days){
       svgElement("line",{
         x1:left,
         y1:y(value),
-        x2:left + plotWidth,
+        x2:
+          left +
+          chartWidth,
         y2:y(value),
-        stroke:"#bbb"
+        stroke:"#b8b8b8"
       })
     );
 
@@ -1393,21 +4192,27 @@ function drawWind(days){
         "font-size":14
       });
 
-    label.textContent = value;
-    svg.appendChild(label);
+    label.textContent =
+      value;
+
+    svg.appendChild(
+      label
+    );
   }
 
   svg.appendChild(
     svgElement("path",{
       d:pointPath(
-        points.map((point,index)=>[
-          x(index),
-          y(point.windKnots)
-        ])
+        points.map(
+          (point,index)=>[
+            x(index),
+            y(point.windKnots)
+          ]
+        )
       ),
 
       fill:"none",
-      stroke:"#1687ef",
+      stroke:"#1688ee",
       "stroke-width":4,
       "stroke-linejoin":"round",
       "stroke-linecap":"round"
@@ -1417,60 +4222,51 @@ function drawWind(days){
   svg.appendChild(
     svgElement("path",{
       d:pointPath(
-        points.map((point,index)=>[
-          x(index),
-          y(point.gustKnots)
-        ])
+        points.map(
+          (point,index)=>[
+            x(index),
+            y(point.gustKnots)
+          ]
+        )
       ),
 
       fill:"none",
-      stroke:"#178d8e",
+      stroke:"#168c91",
       "stroke-width":4,
       "stroke-linejoin":"round",
       "stroke-linecap":"round"
     })
   );
 
-  /*
-   * Windfiedern alle drei Stunden.
-   * Zwei versetzte Reihen schaffen zusätzlichen Abstand.
-   */
-  points.forEach((point,index)=>{
-    if(point.hour % 3 !== 0){
-      return;
+  points.forEach(
+    (point,index)=>{
+      if(point.hour % 2 !== 0){
+        return;
+      }
+
+      const row =
+        Math.floor(
+          point.hour / 2
+        ) %
+        3;
+
+      drawWindBarb(
+        svg,
+        x(index),
+        26 +
+        row *
+        23,
+        point.windKnots,
+        point.directionFrom
+      );
     }
-
-    const row =
-      Math.floor(
-        point.hour / 3
-      ) %
-      2;
-
-    drawWindBarb(
-      svg,
-      x(index),
-      row === 0 ? 35 : 65,
-      point.windKnots,
-      point.windDirectionFrom
-    );
-  });
+  );
 
   drawTimeLabels(
     svg,
     points,
     x,
     height - 13
-  );
-}
-
-function formatCoordinate(
-  value,
-  positive,
-  negative
-){
-  return (
-    `${Math.abs(value).toFixed(2)}°` +
-    `${value >= 0 ? positive : negative}`
   );
 }
 
@@ -1484,8 +4280,16 @@ function updateHeader(){
     selectedPlace;
 
   $("coordinates").textContent =
-    `${formatCoordinate(latitude,"N","S")}, ` +
-    `${formatCoordinate(longitude,"E","W")}`;
+    `${formatCoordinate(
+      latitude,
+      "N",
+      "S"
+    )}, ` +
+    `${formatCoordinate(
+      longitude,
+      "E",
+      "W"
+    )}`;
 }
 
 async function searchPlaces(query){
@@ -1495,10 +4299,13 @@ async function searchPlaces(query){
   }
 
   try{
-    const data = await fetchJson(
-      geocodingUrl(query.trim()),
-      "Ortssuche"
-    );
+    const data =
+      await fetchJson(
+        geocodingUrl(
+          query.trim()
+        ),
+        "Ortssuche"
+      );
 
     showSearchResults(
       data.results || []
@@ -1524,6 +4331,7 @@ function showSearchResults(results){
       document.createElement("button");
 
     button.type = "button";
+
     button.className =
       "search-result";
 
@@ -1532,7 +4340,8 @@ function showSearchResults(results){
         ${place.name}
         ${
           place.postcodes?.[0]
-            ? " " + place.postcodes[0]
+            ? " " +
+              place.postcodes[0]
             : ""
         }
       </strong>
@@ -1575,14 +4384,18 @@ function showSearchResults(results){
           selectedPlace;
 
         closeSearchResults();
-        load();
+        loadAll();
       }
     );
 
-    container.appendChild(button);
+    container.appendChild(
+      button
+    );
   });
 
-  container.classList.add("open");
+  container.classList.add(
+    "open"
+  );
 }
 
 function closeSearchResults(){
@@ -1594,30 +4407,127 @@ function closeSearchResults(){
     .replaceChildren();
 }
 
-async function load(){
+function switchView(showFiveDays){
+  $("panel14").classList.toggle(
+    "active",
+    !showFiveDays
+  );
+
+  $("panel5").classList.toggle(
+    "active",
+    showFiveDays
+  );
+
+  $("show14Button").classList.toggle(
+    "active",
+    !showFiveDays
+  );
+
+  $("show5Button").classList.toggle(
+    "active",
+    showFiveDays
+  );
+}
+
+async function loadAll(){
   $("updateButton").disabled = true;
   $("locateButton").disabled = true;
 
   setStatus(
-    "Best-Match-Daten werden geladen …"
+    "Best Match und Ensembleprodukte werden geladen …"
   );
 
   try{
-    const forecast =
-      await fetchJson(
-        forecastUrl(),
+    const [
+      forecast,
+      ensembleResults
+    ] = await Promise.all([
+      fetchJson(
+        forecastUrl(14),
         "Best Match"
+      ),
+
+      Promise.allSettled(
+        ENSEMBLE_MODELS.map(
+          async definition=>{
+            return {
+              definition,
+
+              data:
+                await fetchJson(
+                  ensembleUrl(
+                    definition.id
+                  ),
+
+                  definition.label
+                )
+            };
+          }
+        )
+      )
+    ]);
+
+    const ensembles =
+      ensembleResults
+        .filter(
+          result=>
+            result.status ===
+            "fulfilled"
+        )
+        .map(
+          result=>result.value
+        );
+
+    currentForecast =
+      forecast;
+
+    current14Days =
+      mergeForecastAndEnsembles(
+        forecast,
+        ensembles
       );
 
-    currentDays =
-      buildFiveDayData(
+    current5Days =
+      build5DayData(
         forecast
       );
 
-    renderDayHeaders(currentDays);
-    drawTemperature(currentDays);
-    drawCloudRain(currentDays);
-    drawWind(currentDays);
+    render14DayHeaders(
+      current14Days
+    );
+
+    renderConfidence(
+      current14Days
+    );
+
+    drawTemperature14(
+      current14Days
+    );
+
+    drawRain14(
+      current14Days
+    );
+
+    renderProbabilities(
+      current14Days
+    );
+
+    render5DayHeaders(
+      current5Days
+    );
+
+    drawDetailTemperature(
+      current5Days
+    );
+
+    drawDetailCloudRain(
+      current5Days
+    );
+
+    drawDetailWind(
+      current5Days
+    );
+
     updateHeader();
 
     $("updated").textContent =
@@ -1633,9 +4543,17 @@ async function load(){
         }
       );
 
-    setStatus(
-      "Open-Meteo Best Match geladen."
-    );
+    if(ensembles.length){
+      setStatus(
+        `Best Match + ${ensembles.length} Ensembleprodukte geladen.`
+      );
+    }else{
+      setStatus(
+        "Best Match geladen; Ensembleprodukte derzeit nicht verfügbar."
+      );
+    }
+
+    updateWidgetPreview();
   }catch(error){
     console.error(error);
 
@@ -1682,7 +4600,7 @@ function locate(){
       $("placeSearch").value =
         selectedPlace;
 
-      load();
+      loadAll();
     },
 
     error=>{
@@ -1709,9 +4627,616 @@ function locate(){
   );
 }
 
+/* Widget */
+
+function selectedWidgetOptions(){
+  return [
+    ...document.querySelectorAll(
+      ".widget-option:checked"
+    )
+  ].map(
+    option=>option.value
+  );
+}
+
+function dailyWidgetData(){
+  if(!currentForecast?.daily){
+    return [];
+  }
+
+  const daily =
+    currentForecast.daily;
+
+  return daily.time.map(
+    (date,index)=>({
+      dateObject:
+        new Date(
+          date +
+          "T12:00:00"
+        ),
+
+      code:
+        daily.weather_code?.[index] ?? -1,
+
+      maximum:
+        daily
+          .temperature_2m_max
+          ?.[index] ?? 0,
+
+      minimum:
+        daily
+          .temperature_2m_min
+          ?.[index] ?? 0,
+
+      windKmh:
+        daily
+          .wind_speed_10m_max
+          ?.[index] ?? 0,
+
+      gustKmh:
+        daily
+          .wind_gusts_10m_max
+          ?.[index] ?? 0,
+
+      direction:
+        daily
+          .wind_direction_10m_dominant
+          ?.[index] ?? 0,
+
+      rain:
+        daily
+          .precipitation_sum
+          ?.[index] ?? 0,
+
+      probability:
+        daily
+          .precipitation_probability_max
+          ?.[index] ?? 0
+    })
+  );
+}
+
+function directionArrow(degrees){
+  return `
+    <span
+      style="
+        display:inline-block;
+        transform:rotate(${degrees + 180}deg)
+      ">
+      ➤
+    </span>
+  `;
+}
+
+function renderWidget(
+  container,
+  daysCount,
+  theme,
+  options
+){
+  const days =
+    dailyWidgetData()
+      .slice(
+        0,
+        daysCount
+      );
+
+  const {
+    latitude,
+    longitude
+  } = coordinates();
+
+  container.className =
+    "widget-card" +
+    (
+      theme === "dark"
+        ? " dark"
+        : ""
+    );
+
+  container.innerHTML = `
+    <div class="widget-head">
+      <div class="widget-place">
+        ${selectedPlace || "Wetter"}
+      </div>
+
+      <div class="widget-coordinates">
+        ${formatCoordinate(
+          latitude,
+          "N",
+          "S"
+        )},
+        ${formatCoordinate(
+          longitude,
+          "E",
+          "W"
+        )}
+      </div>
+    </div>
+
+    <div
+      class="widget-days"
+      style="
+        grid-template-columns:
+        repeat(${days.length},minmax(0,1fr))
+      ">
+    </div>
+  `;
+
+  const grid =
+    container.querySelector(
+      ".widget-days"
+    );
+
+  days.forEach(day=>{
+    const cell =
+      document.createElement("div");
+
+    cell.className =
+      "widget-day";
+
+    cell.innerHTML = `
+      <div class="widget-weekday">
+        ${day.dateObject.toLocaleDateString(
+          "de-DE",
+          {weekday:"short"}
+        )}
+      </div>
+
+      <div class="widget-date">
+        ${formatShortDate(
+          day.dateObject
+        )}
+      </div>
+
+      ${
+        options.includes("icon")
+          ? `
+            <div class="widget-pictogram">
+              ${weatherIcon(
+                day.code,
+                true
+              )}
+            </div>
+          `
+          : ""
+      }
+
+      ${
+        options.includes("max")
+          ? `
+            <div class="widget-max">
+              ${Math.round(
+                day.maximum
+              )} °C
+            </div>
+          `
+          : ""
+      }
+
+      ${
+        options.includes("min")
+          ? `
+            <div class="widget-min">
+              ${Math.round(
+                day.minimum
+              )} °C
+            </div>
+          `
+          : ""
+      }
+
+      ${
+        options.includes("wind")
+          ? `
+            <div class="widget-wind">
+              ${Math.round(
+                day.windKmh
+              )} km/h
+            </div>
+          `
+          : ""
+      }
+
+      ${
+        options.includes("gust")
+          ? `
+            <div class="widget-gust">
+              ${Math.round(
+                day.gustKmh
+              )} km/h
+            </div>
+          `
+          : ""
+      }
+
+      ${
+        options.includes("direction")
+          ? `
+            <div class="widget-direction">
+              ${directionArrow(
+                day.direction
+              )}
+            </div>
+          `
+          : ""
+      }
+
+      ${
+        options.includes("rain")
+          ? `
+            <div class="widget-rain">
+              💧${day.rain.toFixed(1)} mm
+            </div>
+          `
+          : ""
+      }
+
+      ${
+        options.includes("probability")
+          ? `
+            <div class="widget-probability">
+              ${Math.round(
+                day.probability
+              )}%
+            </div>
+          `
+          : ""
+      }
+    `;
+
+    grid.appendChild(
+      cell
+    );
+  });
+}
+
+function buildWidgetUrl(){
+  const url =
+    new URL(
+      window.location.href
+    );
+
+  const {
+    latitude,
+    longitude
+  } = coordinates();
+
+  url.search = "";
+
+  url.searchParams.set(
+    "mode",
+    "widget"
+  );
+
+  url.searchParams.set(
+    "days",
+    $("widgetDays").value
+  );
+
+  url.searchParams.set(
+    "theme",
+    widgetTheme
+  );
+
+  url.searchParams.set(
+    "lat",
+    latitude.toFixed(4)
+  );
+
+  url.searchParams.set(
+    "lon",
+    longitude.toFixed(4)
+  );
+
+  url.searchParams.set(
+    "name",
+    selectedPlace || "Wetter"
+  );
+
+  url.searchParams.set(
+    "options",
+    selectedWidgetOptions()
+      .join(",")
+  );
+
+  return url.toString();
+}
+
+function updateEmbedCode(){
+  const days =
+    Number(
+      $("widgetDays").value
+    );
+
+  const height =
+    150 +
+    (
+      selectedWidgetOptions().length *
+      24
+    );
+
+  $("embedCode").value =
+    `<iframe\n` +
+    `  src="${buildWidgetUrl()}"\n` +
+    `  width="100%"\n` +
+    `  height="${Math.max(
+      310,
+      height
+    )}"\n` +
+    `  style="border:0;overflow:hidden"\n` +
+    `  loading="lazy"\n` +
+    `  title="Wetter-Widget">\n` +
+    `</iframe>`;
+}
+
+function updateWidgetPreview(){
+  if(!currentForecast){
+    return;
+  }
+
+  const days =
+    Number(
+      $("widgetDays").value
+    );
+
+  $("widgetDaysOutput").value =
+    String(days);
+
+  $("widgetDaysOutput").textContent =
+    String(days);
+
+  $("widgetLocationText").textContent =
+    selectedPlace ||
+    "Aktueller Ort";
+
+  renderWidget(
+    $("widgetPreview"),
+    days,
+    widgetTheme,
+    selectedWidgetOptions()
+  );
+
+  updateEmbedCode();
+}
+
+function openWidgetModal(){
+  $("widgetModalBackdrop")
+    .classList
+    .add("open");
+
+  $("widgetModalBackdrop")
+    .setAttribute(
+      "aria-hidden",
+      "false"
+    );
+
+  updateWidgetPreview();
+}
+
+function closeWidgetModal(){
+  $("widgetModalBackdrop")
+    .classList
+    .remove("open");
+
+  $("widgetModalBackdrop")
+    .setAttribute(
+      "aria-hidden",
+      "true"
+    );
+}
+
+async function copyEmbedCode(){
+  const text =
+    $("embedCode").value;
+
+  try{
+    await navigator.clipboard.writeText(
+      text
+    );
+
+    $("copyEmbedButton").textContent =
+      "Kopiert";
+
+    setTimeout(
+      ()=>{
+        $("copyEmbedButton").textContent =
+          "Code kopieren";
+      },
+      1400
+    );
+  }catch{
+    $("embedCode").select();
+
+    document.execCommand(
+      "copy"
+    );
+  }
+}
+
+async function initialiseWidgetMode(){
+  const parameters =
+    new URLSearchParams(
+      window.location.search
+    );
+
+  if(
+    parameters.get("mode") !==
+    "widget"
+  ){
+    return false;
+  }
+
+  document.body.classList.add(
+    "widget-mode"
+  );
+
+  const latitude =
+    Number(
+      parameters.get("lat")
+    );
+
+  const longitude =
+    Number(
+      parameters.get("lon")
+    );
+
+  if(Number.isFinite(latitude)){
+    $("latitude").value =
+      latitude.toFixed(4);
+  }
+
+  if(Number.isFinite(longitude)){
+    $("longitude").value =
+      longitude.toFixed(4);
+  }
+
+  selectedPlace =
+    parameters.get("name") ||
+    "Wetter";
+
+  const days =
+    Math.min(
+      7,
+      Math.max(
+        1,
+        Number(
+          parameters.get("days")
+        ) || 4
+      )
+    );
+
+  const theme =
+    parameters.get("theme") ===
+    "dark"
+      ? "dark"
+      : "light";
+
+  const options =
+    (
+      parameters.get("options") ||
+      "icon,max,min,wind,gust,direction,rain,probability"
+    )
+      .split(",")
+      .filter(Boolean);
+
+  try{
+    currentForecast =
+      await fetchJson(
+        forecastUrl(
+          Math.max(
+            7,
+            days
+          )
+        ),
+        "Widget"
+      );
+
+    renderWidget(
+      $("standaloneWidget"),
+      days,
+      theme,
+      options
+    );
+  }catch(error){
+    $("standaloneWidget").innerHTML =
+      `<div style="padding:15px;color:#a00000">
+        ${error.message}
+      </div>`;
+  }
+
+  return true;
+}
+
+/* Ereignisse */
+
+$("show14Button").addEventListener(
+  "click",
+  ()=>{
+    switchView(false);
+  }
+);
+
+$("show5Button").addEventListener(
+  "click",
+  ()=>{
+    switchView(true);
+  }
+);
+
+$("widgetButton").addEventListener(
+  "click",
+  openWidgetModal
+);
+
+$("closeWidgetButton").addEventListener(
+  "click",
+  closeWidgetModal
+);
+
+$("widgetModalBackdrop").addEventListener(
+  "click",
+  event=>{
+    if(
+      event.target ===
+      $("widgetModalBackdrop")
+    ){
+      closeWidgetModal();
+    }
+  }
+);
+
+$("widgetDays").addEventListener(
+  "input",
+  updateWidgetPreview
+);
+
+document
+  .querySelectorAll(
+    ".widget-option"
+  )
+  .forEach(option=>{
+    option.addEventListener(
+      "change",
+      updateWidgetPreview
+    );
+  });
+
+document
+  .querySelectorAll(
+    "#themeSegment .segment-button"
+  )
+  .forEach(button=>{
+    button.addEventListener(
+      "click",
+      ()=>{
+        widgetTheme =
+          button.dataset.theme;
+
+        document
+          .querySelectorAll(
+            "#themeSegment .segment-button"
+          )
+          .forEach(item=>{
+            item.classList.toggle(
+              "active",
+              item === button
+            );
+          });
+
+        updateWidgetPreview();
+      }
+    );
+  });
+
+$("copyEmbedButton").addEventListener(
+  "click",
+  copyEmbedCode
+);
+
 $("updateButton").addEventListener(
   "click",
-  load
+  loadAll
 );
 
 $("locateButton").addEventListener(
@@ -1724,16 +5249,19 @@ $("placeSearch").addEventListener(
   event=>{
     selectedPlace = "";
 
-    clearTimeout(searchTimer);
-
-    searchTimer = setTimeout(
-      ()=>{
-        searchPlaces(
-          event.target.value
-        );
-      },
-      300
+    clearTimeout(
+      searchTimer
     );
+
+    searchTimer =
+      setTimeout(
+        ()=>{
+          searchPlaces(
+            event.target.value
+          );
+        },
+        300
+      );
   }
 );
 
@@ -1769,20 +5297,40 @@ document.addEventListener(
   }
 );
 
+document.addEventListener(
+  "keydown",
+  event=>{
+    if(event.key === "Escape"){
+      closeWidgetModal();
+    }
+  }
+);
+
 window.addEventListener(
   "resize",
   ()=>{
-    if(currentDays){
-      drawTemperature(currentDays);
-      drawCloudRain(currentDays);
-      drawWind(currentDays);
+    if(current14Days){
+      drawTemperature14(
+        current14Days
+      );
+
+      drawRain14(
+        current14Days
+      );
     }
   }
 );
 
 window.addEventListener(
   "DOMContentLoaded",
-  load
+  async ()=>{
+    const widgetMode =
+      await initialiseWidgetMode();
+
+    if(!widgetMode){
+      await loadAll();
+    }
+  }
 );
 </script>
 </body>
