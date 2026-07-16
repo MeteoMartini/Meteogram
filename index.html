@@ -25,8 +25,6 @@
   --blue-outer:rgba(66,129,225,.14);
 
   --rain:#1558e8;
-  --rain-inner:rgba(38,112,235,.36);
-  --rain-outer:rgba(38,112,235,.15);
   --rain-range:#777;
   --cyan:#27bfe2;
 
@@ -35,7 +33,7 @@
   --right-space:24px;
 
   --temp-height:350px;
-  --rain-height:360px;
+  --rain-height:340px;
 }
 
 *{
@@ -262,7 +260,6 @@ button:disabled{
   display:flex;
   align-items:center;
   justify-content:center;
-  gap:1px;
   min-width:48px;
 }
 
@@ -392,6 +389,33 @@ svg{
 .legend-line{
   width:28px;
   border-top:4px solid;
+}
+
+.legend-range{
+  position:relative;
+  width:28px;
+  height:18px;
+}
+
+.legend-range::before{
+  position:absolute;
+  top:1px;
+  bottom:1px;
+  left:13px;
+  width:2px;
+  background:#777;
+  content:"";
+}
+
+.legend-range::after{
+  position:absolute;
+  top:1px;
+  left:7px;
+  width:14px;
+  height:14px;
+  border-top:2px solid #777;
+  border-bottom:2px solid #777;
+  content:"";
 }
 
 .updated{
@@ -656,7 +680,7 @@ svg{
       <svg
         id="rainChart"
         role="img"
-        aria-label="Niederschlag mit Ensemble-Streubereichen">
+        aria-label="Niederschlag mit Modellspanne">
       </svg>
 
       <section
@@ -717,29 +741,17 @@ svg{
     </div>
 
     <div class="legend-item">
-      <span
-        class="legend-box"
-        style="background:rgba(38,112,235,.36)">
-      </span>
-      innerer Niederschlagsbereich
-    </div>
-
-    <div class="legend-item">
-      <span
-        class="legend-box"
-        style="background:rgba(38,112,235,.15)">
-      </span>
-      äußerer Niederschlagsbereich
+      <span class="legend-range"></span>
+      mögliche Niederschlagsspanne
     </div>
   </div>
 
   <div id="updated" class="updated"></div>
 
   <div class="note">
-    Kurzfristig werden ICON-D2-EPS und ICON-EU-EPS besonders stark
-    berücksichtigt. Die Niederschlagsbereiche kombinieren die Streuung der
-    verfügbaren Ensembles und die Unterschiede zwischen deren Mittelwerten.
-    Die kräftigen blauen Balken zeigen die Best-Match-Niederschlagssumme.
+    Die Niederschlagsbalken zeigen die Best-Match-Tagesmenge. Die grauen
+    Fehlerbalken zeigen die aus den verfügbaren Ensembleprodukten abgeleitete
+    mögliche Niederschlagsspanne.
   </div>
 
 </main>
@@ -833,7 +845,7 @@ function chartHeights(){
       }
     : {
         temperature:350,
-        rain:360
+        rain:340
       };
 }
 
@@ -1201,15 +1213,13 @@ function significantWeatherChange(
     return true;
   }
 
-  const isWet = code => {
-    return [
-      51,53,55,56,57,
-      61,63,65,66,67,
-      71,73,75,77,
-      80,81,82,85,86,
-      95,96,99
-    ].includes(code);
-  };
+  const isWet = code => [
+    51,53,55,56,57,
+    61,63,65,66,67,
+    71,73,75,77,
+    80,81,82,85,86,
+    95,96,99
+  ].includes(code);
 
   if(
     isWet(firstCode) !==
@@ -1431,10 +1441,6 @@ function dailyEnsembleData(ensemble){
         0
       );
 
-    /*
-     * Stundenstreuungen werden quadratisch kombiniert.
-     * Ein Korrekturfaktor verhindert eine zu enge Tagesspanne.
-     */
     const precipitationVariance =
       hours.reduce(
         (sum,hour) =>
@@ -1718,22 +1724,16 @@ function mergeData(
           minimumSpread
         );
 
-      const horizonPenalty =
-        index * 1.7;
-
-      const spreadPenalty =
-        Math.min(
-          62,
-          dominantSpread * 11
-        );
-
       const confidence =
         Math.max(
           5,
           Math.round(
             98 -
-            horizonPenalty -
-            spreadPenalty
+            index * 1.7 -
+            Math.min(
+              62,
+              dominantSpread * 11
+            )
           )
         );
 
@@ -1811,23 +1811,7 @@ function mergeData(
 
         rain:mainRain,
 
-        rainMean,
-
-        rainInnerLow:
-          Math.max(
-            0,
-            rainMean -
-            rainSpread
-          ),
-
-        rainInnerHigh:
-          Math.max(
-            0,
-            rainMean +
-            rainSpread
-          ),
-
-        rainOuterLow:
+        rainRangeLow:
           Math.max(
             0,
             rainMean -
@@ -1835,9 +1819,9 @@ function mergeData(
             rainSpread
           ),
 
-        rainOuterHigh:
+        rainRangeHigh:
           Math.max(
-            0,
+            mainRain,
             rainMean +
             1.96 *
             rainSpread
@@ -1855,13 +1839,6 @@ function mergeData(
             : 0,
 
         confidence,
-
-        ensembleCount:
-          Math.max(
-            high?.modelCount ?? 0,
-            low?.modelCount ?? 0,
-            precipitation?.modelCount ?? 0
-          ),
 
         ensembleLabels:[
           ...(high?.labels || []),
@@ -2355,7 +2332,7 @@ function drawRain(days){
         day =>
           Math.max(
             day.rain,
-            day.rainOuterHigh
+            day.rainRangeHigh
           )
       )
     );
@@ -2448,102 +2425,61 @@ function drawRain(days){
     );
   }
 
-  const outerWidth =
-    dayWidth * .76;
-
-  const innerWidth =
-    dayWidth * .58;
-
   const rainBarWidth =
-    dayWidth * .34;
+    dayWidth * .58;
 
   days.forEach((day,index) => {
     const x =
       dayCenter(index);
 
+    const rangeTop =
+      y(day.rainRangeHigh);
+
+    const rangeBottom =
+      y(day.rainRangeLow);
+
     /*
-     * Äußerer Ensemblebereich.
+     * Schlichte Niederschlagsspanne wie im Referenzmuster.
      */
-    if(day.rainOuterHigh > 0){
+    if(day.rainRangeHigh > .05){
       svg.appendChild(
-        svgElement("rect",{
-          x:x - outerWidth / 2,
-          y:y(day.rainOuterHigh),
-          width:outerWidth,
-          height:
-            y(day.rainOuterLow) -
-            y(day.rainOuterHigh),
-          fill:"rgba(38,112,235,.15)",
-          stroke:"none"
+        svgElement("line",{
+          x1:x,
+          y1:rangeTop,
+          x2:x,
+          y2:rangeBottom,
+          stroke:"#777",
+          "stroke-width":3
+        })
+      );
+
+      svg.appendChild(
+        svgElement("line",{
+          x1:x - 10,
+          y1:rangeTop,
+          x2:x + 10,
+          y2:rangeTop,
+          stroke:"#777",
+          "stroke-width":3
+        })
+      );
+
+      svg.appendChild(
+        svgElement("line",{
+          x1:x - 10,
+          y1:rangeBottom,
+          x2:x + 10,
+          y2:rangeBottom,
+          stroke:"#777",
+          "stroke-width":3
         })
       );
     }
-
-    /*
-     * Innerer Ensemblebereich.
-     */
-    if(day.rainInnerHigh > 0){
-      svg.appendChild(
-        svgElement("rect",{
-          x:x - innerWidth / 2,
-          y:y(day.rainInnerHigh),
-          width:innerWidth,
-          height:
-            y(day.rainInnerLow) -
-            y(day.rainInnerHigh),
-          fill:"rgba(38,112,235,.36)",
-          stroke:"rgba(35,86,175,.5)",
-          "stroke-width":1
-        })
-      );
-    }
-
-    /*
-     * Gesamte Modellspanne als Fehlerbalken.
-     */
-    const outerTop =
-      y(day.rainOuterHigh);
-
-    const outerBottom =
-      y(day.rainOuterLow);
-
-    svg.appendChild(
-      svgElement("line",{
-        x1:x,
-        y1:outerTop,
-        x2:x,
-        y2:outerBottom,
-        stroke:"#777",
-        "stroke-width":2
-      })
-    );
-
-    svg.appendChild(
-      svgElement("line",{
-        x1:x - 9,
-        y1:outerTop,
-        x2:x + 9,
-        y2:outerTop,
-        stroke:"#777",
-        "stroke-width":2
-      })
-    );
-
-    svg.appendChild(
-      svgElement("line",{
-        x1:x - 9,
-        y1:outerBottom,
-        x2:x + 9,
-        y2:outerBottom,
-        stroke:"#777",
-        "stroke-width":2
-      })
-    );
 
     /*
      * Best-Match-Niederschlagsmenge.
      */
-    if(day.rain > 0){
+    if(day.rain > .05){
       svg.appendChild(
         svgElement("rect",{
           x:x - rainBarWidth / 2,
@@ -2653,7 +2589,6 @@ function showSearchResults(results){
       document.createElement("button");
 
     button.type = "button";
-
     button.className =
       "search-result";
 
@@ -2733,22 +2668,17 @@ async function load(){
   );
 
   try{
-    const forecastPromise =
-      loadForecast();
-
-    const ensemblePromise =
-      Promise.allSettled(
-        ENSEMBLES.map(
-          loadEnsemble
-        )
-      );
-
     const [
       forecast,
       ensembleResults
     ] = await Promise.all([
-      forecastPromise,
-      ensemblePromise
+      loadForecast(),
+
+      Promise.allSettled(
+        ENSEMBLES.map(
+          loadEnsemble
+        )
+      )
     ]);
 
     const ensembles =
