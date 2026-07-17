@@ -22,8 +22,8 @@
   --rain:#145bea;
   --shower:#13bdb4;
   --red:#ed1b24;
-  --green:#18804b;
-  --amber:#a76900;
+  --green:#159455;
+  --amber:#b87800;
   --shadow:0 10px 30px rgba(24,48,68,.09);
 
   --plot-left:44px;
@@ -324,7 +324,7 @@ button{
   display:flex;
   align-items:flex-start;
   justify-content:space-between;
-  gap:12px;
+  gap:14px;
   margin-bottom:10px;
 }
 
@@ -339,35 +339,89 @@ button{
   font-size:12px;
 }
 
-.current-quality{
+/*
+  Die Stationsprüfung läuft unauffällig im Hintergrund.
+  Es wird nur ein kompakter Status angezeigt.
+*/
+.station-verification{
   display:flex;
-  align-items:center;
-  gap:7px;
-  max-width:520px;
+  max-width:min(610px,56%);
+  align-items:flex-start;
+  gap:8px;
   padding:7px 10px;
-  border:1px solid #c8d6df;
-  border-radius:999px;
-  background:#f4f8fa;
-  color:#35505f;
+  border:1px solid #d1dce3;
+  border-radius:11px;
+  background:#f6f9fb;
+  color:#50616d;
   font-size:10px;
-  line-height:1.25;
+  line-height:1.35;
 }
 
-.current-quality.verified{
-  border-color:#b6d7c4;
-  background:#eff9f3;
-  color:#1f6640;
+.station-verification.loading{
+  color:#596975;
 }
 
-.current-quality.partial{
-  border-color:#ead4a1;
-  background:#fff9e8;
-  color:#765100;
+.station-verification.verified{
+  border-color:#b7dac5;
+  background:#f0faf4;
+  color:#1d633b;
 }
 
-.current-quality-icon{
+.station-verification.partial{
+  border-color:#ead5a4;
+  background:#fff9e9;
+  color:#735000;
+}
+
+.station-verification.unavailable{
+  color:#667681;
+}
+
+.station-dot{
   flex:0 0 auto;
-  font-size:15px;
+  width:9px;
+  height:9px;
+  margin-top:2px;
+  border-radius:50%;
+  background:#9ca8b0;
+  box-shadow:0 0 0 3px rgba(120,135,145,.10);
+}
+
+.station-verification.loading .station-dot{
+  background:#7d8b95;
+  animation:stationPulse 1.2s infinite;
+}
+
+.station-verification.verified .station-dot{
+  background:var(--green);
+  box-shadow:0 0 0 3px rgba(21,148,85,.14);
+}
+
+.station-verification.partial .station-dot{
+  background:var(--amber);
+  box-shadow:0 0 0 3px rgba(184,120,0,.13);
+}
+
+.station-status-title{
+  font-weight:800;
+}
+
+.station-status-details{
+  margin-top:1px;
+  opacity:.9;
+}
+
+@keyframes stationPulse{
+  0%,
+  100%{
+    opacity:.45;
+    transform:scale(.9);
+  }
+
+  50%{
+    opacity:1;
+    transform:scale(1.08);
+  }
 }
 
 .dashboard-main{
@@ -435,29 +489,29 @@ button{
   background:#fff;
 }
 
-.metric-card.station-value{
-  border-color:#b7d8c5;
+.metric-card.station-backed{
+  border-color:#b8d9c6;
   background:
-    linear-gradient(145deg,#ffffff,#f3faf6);
+    linear-gradient(145deg,#ffffff,#f2faf5);
 }
 
-.metric-card.station-value::after{
+.metric-card.station-backed::after{
   position:absolute;
-  top:7px;
-  right:7px;
+  top:8px;
+  right:8px;
   width:7px;
   height:7px;
   border-radius:50%;
-  background:#27a260;
+  background:var(--green);
   content:"";
-  box-shadow:0 0 0 3px rgba(39,162,96,.11);
+  box-shadow:0 0 0 3px rgba(21,148,85,.12);
 }
 
 .metric-top{
   display:flex;
   align-items:center;
   gap:6px;
-  padding-right:8px;
+  padding-right:10px;
 }
 
 .metric-icon{
@@ -484,96 +538,6 @@ button{
   color:#586672;
   font-size:10px;
   line-height:1.3;
-}
-
-.observation-panel{
-  display:none;
-  margin-top:11px;
-  padding:11px 13px;
-  border:1px solid #cfdce4;
-  border-radius:13px;
-  background:#f8fbfc;
-}
-
-.observation-panel.visible{
-  display:block;
-}
-
-.observation-panel.verified{
-  border-color:#b9d8c5;
-  background:#f1faf5;
-}
-
-.observation-panel.warning{
-  border-color:#ead4a1;
-  background:#fff9e8;
-}
-
-.observation-head{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:12px;
-}
-
-.observation-title{
-  font-size:13px;
-  font-weight:850;
-}
-
-.observation-state{
-  flex:0 0 auto;
-  padding:3px 7px;
-  border-radius:999px;
-  background:#dfe9ee;
-  color:#385566;
-  font-size:9px;
-  font-weight:800;
-}
-
-.observation-panel.verified .observation-state{
-  background:#d8efe1;
-  color:#176039;
-}
-
-.observation-panel.warning .observation-state{
-  background:#f5e7ba;
-  color:#755000;
-}
-
-.observation-description{
-  margin-top:4px;
-  color:#53636e;
-  font-size:10px;
-  line-height:1.45;
-}
-
-.observation-grid{
-  display:grid;
-  grid-template-columns:repeat(5,minmax(0,1fr));
-  gap:7px;
-  margin-top:9px;
-}
-
-.observation-item{
-  min-width:0;
-  padding:7px 8px;
-  border-radius:9px;
-  background:rgba(255,255,255,.72);
-}
-
-.observation-label{
-  color:#71808a;
-  font-size:9px;
-}
-
-.observation-value{
-  margin-top:2px;
-  overflow:hidden;
-  font-size:11px;
-  font-weight:800;
-  text-overflow:ellipsis;
-  white-space:nowrap;
 }
 
 .dashboard-lower{
@@ -1431,8 +1395,8 @@ button{
     grid-template-columns:1fr;
   }
 
-  .observation-grid{
-    grid-template-columns:repeat(3,minmax(0,1fr));
+  .station-verification{
+    max-width:50%;
   }
 }
 
@@ -1507,11 +1471,11 @@ button{
     display:block;
   }
 
-  .current-quality{
+  .station-verification{
     width:100%;
     max-width:none;
     margin-top:7px;
-    border-radius:10px;
+    padding:7px 9px;
   }
 
   .hero-weather{
@@ -1536,19 +1500,6 @@ button{
   .metric-card{
     min-height:69px;
     padding:8px;
-  }
-
-  .observation-head{
-    display:block;
-  }
-
-  .observation-state{
-    display:inline-block;
-    margin-top:6px;
-  }
-
-  .observation-grid{
-    grid-template-columns:1fr 1fr;
   }
 
   .dashboard-hourly{
@@ -1640,6 +1591,10 @@ button{
 
   .probability{
     font-size:clamp(8px,2.45vw,11px);
+  }
+
+  .station-status-details{
+    font-size:9px;
   }
 }
 </style>
@@ -1762,11 +1717,22 @@ button{
         <div id="dashboardSubtitle" class="dashboard-subtitle"></div>
       </div>
 
-      <div id="currentQuality" class="current-quality">
-        <span id="currentQualityIcon" class="current-quality-icon">◌</span>
-        <span id="currentQualityText">
-          Aktuelle Daten werden geprüft.
-        </span>
+      <div
+        id="stationVerification"
+        class="station-verification loading"
+        title="Die Prüfung mit realen Stationsdaten läuft automatisch im Hintergrund."
+      >
+        <span class="station-dot"></span>
+
+        <div>
+          <div id="stationStatusTitle" class="station-status-title">
+            Stationsprüfung läuft
+          </div>
+
+          <div id="stationStatusDetails" class="station-status-details">
+            Suche nach einer aktuellen Messstation in der Umgebung …
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1784,27 +1750,6 @@ button{
 
       <section id="metricGrid" class="metric-grid"></section>
     </div>
-
-    <section id="observationPanel" class="observation-panel">
-      <div class="observation-head">
-        <div>
-          <div class="observation-title">
-            Prüfung der aktuellen Messwerte
-          </div>
-
-          <div
-            id="observationDescription"
-            class="observation-description">
-          </div>
-        </div>
-
-        <div id="observationState" class="observation-state">
-          Prüfung
-        </div>
-      </div>
-
-      <div id="observationGrid" class="observation-grid"></div>
-    </section>
 
     <div class="dashboard-lower">
       <section class="sun-card">
@@ -1988,6 +1933,7 @@ button{
       <header class="forecast-toolbar">
         <div>
           <h2>24-Stunden-Vorhersage</h2>
+
           <div id="hourlyMeta" class="forecast-toolbar-meta">
             Best Match
           </div>
@@ -2264,6 +2210,7 @@ let current14Days = null;
 let activeEnsembles = [];
 let currentObservation = null;
 let verifiedCurrent = null;
+let stationCheckSequence = 0;
 
 let climateNormals = null;
 let climateCacheKey = "";
@@ -2617,7 +2564,7 @@ async function mapWithConcurrency(items,limit,worker){
 
 function isLikelyGermany(latitude,longitude){
   return (
-    latitude >= 47.0 &&
+    latitude >= 47 &&
     latitude <= 55.2 &&
     longitude >= 5.5 &&
     longitude <= 15.6
@@ -2676,9 +2623,7 @@ function dewPointFromTemperatureAndHumidity(
     return null;
   }
 
-  const humidity =
-    clamp(relativeHumidity,1,100);
-
+  const humidity = clamp(relativeHumidity,1,100);
   const a = 17.62;
   const b = 243.12;
 
@@ -2687,11 +2632,7 @@ function dewPointFromTemperatureAndHumidity(
     a * temperature /
     (b + temperature);
 
-  return (
-    b *
-    gamma /
-    (a - gamma)
-  );
+  return b * gamma / (a - gamma);
 }
 
 function relativeHumidityFromTemperatureAndDewPoint(
@@ -2792,11 +2733,7 @@ function normaliseStationObservation(data){
     Number.isFinite(temperature) &&
     dewPoint > temperature + .5
   ){
-    dewPoint =
-      Math.min(
-        dewPoint,
-        temperature
-      );
+    dewPoint = temperature;
   }
 
   const distance =
@@ -2814,6 +2751,7 @@ function normaliseStationObservation(data){
     temperature,
     relativeHumidity,
     dewPoint,
+
     pressure:
       validNumber(weather.pressure_msl),
 
@@ -2851,10 +2789,6 @@ function normaliseStationObservation(data){
 }
 
 async function fetchNearbyStationObservation(latitude,longitude){
-  if(!shouldLoadDwdStation(latitude,longitude)){
-    return null;
-  }
-
   const data = await fetchJson(
     brightSkyCurrentUrl(latitude,longitude),
     "DWD-Stationsmessung"
@@ -3021,23 +2955,22 @@ function verifyCurrentConditions(forecast,station){
         )
       : null;
 
+  const calculatedStationDewPoint =
+    stationUsable
+      ? dewPointFromTemperatureAndHumidity(
+          station.temperature,
+          station.relativeHumidity
+        )
+      : null;
+
   const stationHumidityConsistent =
     stationUsable
       ? (
-          Number.isFinite(
-            dewPointFromTemperatureAndHumidity(
-              station.temperature,
-              station.relativeHumidity
-            )
-          )
-            ? Math.abs(
-                dewPointFromTemperatureAndHumidity(
-                  station.temperature,
-                  station.relativeHumidity
-                ) -
-                station.dewPoint
-              ) <= 2.5
-            : true
+          !Number.isFinite(calculatedStationDewPoint) ||
+          Math.abs(
+            calculatedStationDewPoint -
+            station.dewPoint
+          ) <= 2.5
         )
       : false;
 
@@ -3088,23 +3021,17 @@ function verifyCurrentConditions(forecast,station){
     stationUsable &&
     stationHumidityConsistent &&
     strongDisagreement &&
-    stationPreferred
+    stationPreferred &&
+    Number.isFinite(modelHumidity) &&
+    Number.isFinite(modelDewPoint)
   ){
     selectedHumidity =
-      (
-        station.relativeHumidity *
-        .65 +
-        modelHumidity *
-        .35
-      );
+      station.relativeHumidity * .65 +
+      modelHumidity * .35;
 
     selectedDewPoint =
-      (
-        station.dewPoint *
-        .65 +
-        modelDewPoint *
-        .35
-      );
+      station.dewPoint * .65 +
+      modelDewPoint * .35;
 
     humiditySource =
       `${station.stationName} / Best Match`;
@@ -3187,6 +3114,200 @@ function verifyCurrentConditions(forecast,station){
         ? minutely.windGust
         : validNumber(current.wind_gusts_10m)
   };
+}
+
+function setStationStatusLoading(){
+  const status =
+    $("stationVerification");
+
+  status.className =
+    "station-verification loading";
+
+  $("stationStatusTitle").textContent =
+    "Stationsprüfung läuft";
+
+  $("stationStatusDetails").textContent =
+    "Aktuelle Messstationen werden im Hintergrund geprüft.";
+}
+
+function formatDistance(distance){
+  if(!Number.isFinite(distance)){
+    return "Entfernung unbekannt";
+  }
+
+  if(distance < 1000){
+    return `${Math.round(distance)} m`;
+  }
+
+  return (
+    `${(distance / 1000).toFixed(1).replace(".",",")} km`
+  );
+}
+
+function formatStationHeight(height){
+  return Number.isFinite(height)
+    ? `${Math.round(height)} m ü. NHN`
+    : "Höhe unbekannt";
+}
+
+function renderStationStatus(){
+  const status =
+    $("stationVerification");
+
+  status.className =
+    "station-verification";
+
+  if(
+    currentObservation &&
+    ["verified","station"].includes(
+      verifiedCurrent?.quality
+    )
+  ){
+    status.classList.add("verified");
+
+    $("stationStatusTitle").textContent =
+      "Mit Stationsdaten geprüft";
+
+    $("stationStatusDetails").textContent =
+      `${currentObservation.stationName} · ` +
+      `${formatStationHeight(currentObservation.height)} · ` +
+      `${formatDistance(currentObservation.distance)}`;
+
+    status.title =
+      `Verwendete Station: ${currentObservation.stationName}. ` +
+      `Messhöhe: ${formatStationHeight(currentObservation.height)}. ` +
+      `Entfernung zum gewählten Standort: ` +
+      `${formatDistance(currentObservation.distance)}.`;
+
+    return;
+  }
+
+  if(
+    currentObservation &&
+    verifiedCurrent?.quality === "blended"
+  ){
+    status.classList.add("partial");
+
+    $("stationStatusTitle").textContent =
+      "Stationsdaten plausibilisiert";
+
+    $("stationStatusDetails").textContent =
+      `${currentObservation.stationName} · ` +
+      `${formatStationHeight(currentObservation.height)} · ` +
+      `${formatDistance(currentObservation.distance)} · ` +
+      `mit Best Match kombiniert`;
+
+    status.title =
+      "Die Stationsmessung wich deutlich von der standortbezogenen " +
+      "Best-Match-Analyse ab und wurde deshalb gewichtet kombiniert.";
+
+    return;
+  }
+
+  if(currentObservation){
+    status.classList.add("partial");
+
+    $("stationStatusTitle").textContent =
+      "Station geprüft, nicht übernommen";
+
+    $("stationStatusDetails").textContent =
+      `${currentObservation.stationName} · ` +
+      `${formatStationHeight(currentObservation.height)} · ` +
+      `${formatDistance(currentObservation.distance)}`;
+
+    status.title =
+      "Die Station wurde im Hintergrund geprüft, war aber zu alt, " +
+      "zu weit entfernt oder für Taupunkt und Luftfeuchte nicht " +
+      "ausreichend plausibel.";
+
+    return;
+  }
+
+  status.classList.add("unavailable");
+
+  $("stationStatusTitle").textContent =
+    shouldLoadDwdStation(
+      Number($("latitude").value),
+      Number($("longitude").value)
+    )
+      ? "Keine geeignete Station verfügbar"
+      : "Best-Match-Standortanalyse";
+
+  $("stationStatusDetails").textContent =
+    shouldLoadDwdStation(
+      Number($("latitude").value),
+      Number($("longitude").value)
+    )
+      ? "Taupunkt und Luftfeuchte stammen aus der lokalen 15-Minuten-Analyse."
+      : "Für diesen Ort werden die aktuellen Best-Match-Daten verwendet.";
+
+  status.title =
+    "Für die aktuelle Anzeige konnte keine geeignete Stationsmessung " +
+    "verwendet werden.";
+}
+
+async function runStationCheckInBackground(
+  latitude,
+  longitude,
+  sequence
+){
+  if(!shouldLoadDwdStation(latitude,longitude)){
+    currentObservation = null;
+
+    verifiedCurrent =
+      verifyCurrentConditions(
+        currentForecast,
+        null
+      );
+
+    renderStationStatus();
+    renderDashboard();
+    return;
+  }
+
+  try{
+    const station =
+      await fetchNearbyStationObservation(
+        latitude,
+        longitude
+      );
+
+    if(sequence !== stationCheckSequence){
+      return;
+    }
+
+    currentObservation =
+      station;
+
+    verifiedCurrent =
+      verifyCurrentConditions(
+        currentForecast,
+        currentObservation
+      );
+
+    renderStationStatus();
+    renderDashboard();
+  }catch(error){
+    console.warn(
+      "Stationsprüfung nicht verfügbar:",
+      error
+    );
+
+    if(sequence !== stationCheckSequence){
+      return;
+    }
+
+    currentObservation = null;
+
+    verifiedCurrent =
+      verifyCurrentConditions(
+        currentForecast,
+        null
+      );
+
+    renderStationStatus();
+    renderDashboard();
+  }
 }
 
 function hasUsableEnsembleData(data){
@@ -3367,39 +3488,6 @@ function formatTime(value){
         }
       )
     : "–";
-}
-
-function formatDistance(distance){
-  if(!Number.isFinite(distance)){
-    return "Entfernung unbekannt";
-  }
-
-  if(distance < 1000){
-    return `${Math.round(distance)} m`;
-  }
-
-  return `${(distance / 1000).toFixed(1).replace(".",",")} km`;
-}
-
-function formatAge(minutes){
-  if(!Number.isFinite(minutes)){
-    return "Zeit unbekannt";
-  }
-
-  if(minutes < 2){
-    return "gerade eben";
-  }
-
-  if(minutes < 60){
-    return `vor ${Math.round(minutes)} Min.`;
-  }
-
-  const hours = Math.floor(minutes / 60);
-  const rest = Math.round(minutes % 60);
-
-  return rest
-    ? `vor ${hours} Std. ${rest} Min.`
-    : `vor ${hours} Std.`;
 }
 
 function probabilityColor(value){
@@ -3634,17 +3722,13 @@ function aggregateHourlyRange(hours,step){
         .slice()
         .sort((a,b)=>{
           const scoreA =
-            a.precipitation *
-            2 +
-            a.probability /
-            50 +
+            a.precipitation * 2 +
+            a.probability / 50 +
             weatherSeverity(a.code);
 
           const scoreB =
-            b.precipitation *
-            2 +
-            b.probability /
-            50 +
+            b.precipitation * 2 +
+            b.probability / 50 +
             weatherSeverity(b.code);
 
           return scoreB - scoreA;
@@ -3784,12 +3868,10 @@ function renderDashboard(){
   const dewPoint =
     verified.selectedDewPoint;
 
-  const stationClass =
+  const stationBacked =
     ["verified","station","blended"].includes(
       verified.quality
-    )
-      ? "station-value"
-      : "";
+    );
 
   $("dashboardSubtitle").textContent =
     selectedPlace ||
@@ -3841,27 +3923,13 @@ function renderDashboard(){
       currentForecast.daily?.sunset?.[0]
     );
 
+  /*
+    Taupunkt und relative Luftfeuchte werden nur noch in einer
+    einzigen Karte angezeigt.
+  */
   $("metricGrid").innerHTML = [
     metricCard(
       "💧",
-      "Luftfeuchte",
-
-      Number.isFinite(humidity)
-        ? `${Math.round(humidity)} %`
-        : "–",
-
-      Number.isFinite(dewPoint)
-        ? (
-            `Taupunkt ${dewPoint.toFixed(1).replace(".",",")} °C` +
-            `<br>${verified.humiditySource}`
-          )
-        : verified.humiditySource,
-
-      stationClass
-    ),
-
-    metricCard(
-      "🌫️",
       "Taupunkt",
 
       Number.isFinite(dewPoint)
@@ -3869,10 +3937,19 @@ function renderDashboard(){
         : "–",
 
       Number.isFinite(humidity)
-        ? `Relative Feuchte ${Math.round(humidity)} %`
-        : "",
+        ? (
+            `Relative Luftfeuchte ${Math.round(humidity)} %` +
+            (
+              stationBacked
+                ? `<br>${verified.humiditySource}`
+                : ""
+            )
+          )
+        : verified.humiditySource,
 
-      stationClass
+      stationBacked
+        ? "station-backed"
+        : ""
     ),
 
     metricCard(
@@ -3977,237 +4054,29 @@ function renderDashboard(){
         : `${Math.round(currentForecast.elevation || 0)} m`,
 
       "ü. NHN"
+    ),
+
+    metricCard(
+      "↕️",
+      "Tagesspanne",
+
+      Number.isFinite(
+        currentForecast.daily?.temperature_2m_max?.[0]
+      )
+        ? (
+            `${Math.round(
+              currentForecast.daily.temperature_2m_min[0]
+            )}° bis ` +
+            `${Math.round(
+              currentForecast.daily.temperature_2m_max[0]
+            )}°`
+          )
+        : "–"
     )
   ].join("");
 
-  renderCurrentQuality();
-  renderObservationPanel();
   renderHazards();
   renderDashboardHours();
-}
-
-function renderCurrentQuality(){
-  const quality =
-    $("currentQuality");
-
-  quality.className =
-    "current-quality";
-
-  if(
-    verifiedCurrent?.quality === "verified" ||
-    verifiedCurrent?.quality === "station"
-  ){
-    quality.classList.add("verified");
-
-    $("currentQualityIcon").textContent =
-      "✓";
-
-    $("currentQualityText").textContent =
-      `Feuchte und Taupunkt mit aktueller DWD-Stationsmessung ` +
-      `(${formatDistance(currentObservation?.distance)}) geprüft.`;
-
-    return;
-  }
-
-  if(verifiedCurrent?.quality === "blended"){
-    quality.classList.add("partial");
-
-    $("currentQualityIcon").textContent =
-      "≈";
-
-    $("currentQualityText").textContent =
-      "Stationsmessung und hochaufgelöste Best-Match-Analyse wurden plausibilisiert und kombiniert.";
-
-    return;
-  }
-
-  if(currentObservation){
-    quality.classList.add("partial");
-
-    $("currentQualityIcon").textContent =
-      "!";
-
-    $("currentQualityText").textContent =
-      "Stationsdaten waren zu alt, zu weit entfernt oder nicht ausreichend plausibel; Best Match wird verwendet.";
-
-    return;
-  }
-
-  $("currentQualityIcon").textContent =
-    "◌";
-
-  $("currentQualityText").textContent =
-    shouldLoadDwdStation(
-      Number($("latitude").value),
-      Number($("longitude").value)
-    )
-      ? "Keine geeignete aktuelle DWD-Stationsmessung verfügbar; hochaufgelöste Best-Match-Daten werden verwendet."
-      : "Aktuelle Werte basieren auf der hochaufgelösten Best-Match-Analyse am gewählten Standort.";
-}
-
-function observationItem(label,value){
-  return `
-    <div class="observation-item">
-      <div class="observation-label">${label}</div>
-      <div class="observation-value">${value}</div>
-    </div>
-  `;
-}
-
-function renderObservationPanel(){
-  const panel =
-    $("observationPanel");
-
-  panel.className =
-    "observation-panel visible";
-
-  if(!currentObservation){
-    $("observationState").textContent =
-      "Best Match";
-
-    $("observationDescription").textContent =
-      shouldLoadDwdStation(
-        Number($("latitude").value),
-        Number($("longitude").value)
-      )
-        ? "Im zulässigen Umkreis wurde keine ausreichend aktuelle und verwertbare DWD-Stationsmessung gefunden. Die aktuellen Werte stammen deshalb aus der standortbezogenen 15-Minuten-Best-Match-Analyse."
-        : "Für diesen Standort wird die aktuelle hochaufgelöste 15-Minuten-Best-Match-Analyse verwendet.";
-
-    $("observationGrid").innerHTML = [
-      observationItem(
-        "Datenquelle",
-        "Open-Meteo Best Match"
-      ),
-
-      observationItem(
-        "Zeitauflösung",
-        "15 Minuten"
-      ),
-
-      observationItem(
-        "Luftfeuchte",
-        Number.isFinite(verifiedCurrent?.modelHumidity)
-          ? `${Math.round(verifiedCurrent.modelHumidity)} %`
-          : "–"
-      ),
-
-      observationItem(
-        "Taupunkt",
-        Number.isFinite(verifiedCurrent?.modelDewPoint)
-          ? `${verifiedCurrent.modelDewPoint.toFixed(1).replace(".",",")} °C`
-          : "–"
-      ),
-
-      observationItem(
-        "Prüfstatus",
-        "Modellanalyse"
-      )
-    ].join("");
-
-    return;
-  }
-
-  const accepted =
-    ["verified","station","blended"].includes(
-      verifiedCurrent?.quality
-    );
-
-  panel.classList.add(
-    accepted
-      ? "verified"
-      : "warning"
-  );
-
-  $("observationState").textContent =
-    accepted
-      ? (
-          verifiedCurrent.quality === "blended"
-            ? "Kombiniert"
-            : "Stationsgeprüft"
-        )
-      : "Nicht übernommen";
-
-  const station =
-    currentObservation;
-
-  $("observationDescription").textContent =
-    accepted
-      ? (
-          `Messwerte der Station ${station.stationName} wurden auf Alter, ` +
-          `Entfernung und die physikalische Konsistenz von Temperatur, ` +
-          `Luftfeuchte und Taupunkt geprüft.`
-        )
-      : (
-          `Die Messwerte der Station ${station.stationName} wurden geprüft, ` +
-          `wegen Alter, Entfernung oder auffälliger Abweichungen jedoch ` +
-          `nicht direkt als aktuelle Standortwerte übernommen.`
-        );
-
-  $("observationGrid").innerHTML = [
-    observationItem(
-      "Station",
-      station.stationName
-    ),
-
-    observationItem(
-      "Entfernung",
-      formatDistance(station.distance)
-    ),
-
-    observationItem(
-      "Messzeit",
-      formatAge(station.ageMinutes)
-    ),
-
-    observationItem(
-      "Feuchte Station",
-      Number.isFinite(station.relativeHumidity)
-        ? `${Math.round(station.relativeHumidity)} %`
-        : "–"
-    ),
-
-    observationItem(
-      "Taupunkt Station",
-      Number.isFinite(station.dewPoint)
-        ? `${station.dewPoint.toFixed(1).replace(".",",")} °C`
-        : "–"
-    ),
-
-    observationItem(
-      "Feuchte Best Match",
-      Number.isFinite(verifiedCurrent?.modelHumidity)
-        ? `${Math.round(verifiedCurrent.modelHumidity)} %`
-        : "–"
-    ),
-
-    observationItem(
-      "Taupunkt Best Match",
-      Number.isFinite(verifiedCurrent?.modelDewPoint)
-        ? `${verifiedCurrent.modelDewPoint.toFixed(1).replace(".",",")} °C`
-        : "–"
-    ),
-
-    observationItem(
-      "Feuchteabweichung",
-      Number.isFinite(verifiedCurrent?.humidityDifference)
-        ? `${verifiedCurrent.humidityDifference.toFixed(0)} %-Pkt.`
-        : "–"
-    ),
-
-    observationItem(
-      "Taupunktabweichung",
-      Number.isFinite(verifiedCurrent?.dewPointDifference)
-        ? `${verifiedCurrent.dewPointDifference.toFixed(1).replace(".",",")} K`
-        : "–"
-    ),
-
-    observationItem(
-      "Stationshöhe",
-      Number.isFinite(station.height)
-        ? `${Math.round(station.height)} m`
-        : "–"
-    )
-  ].join("");
 }
 
 function renderDashboardHours(){
@@ -4415,17 +4284,13 @@ function representativeWeatherCode(points){
     .sort((a,b)=>{
       const scoreA =
         weatherSeverity(a.code) +
-        a.precipitation *
-        1.7 +
-        a.probability /
-        60;
+        a.precipitation * 1.7 +
+        a.probability / 60;
 
       const scoreB =
         weatherSeverity(b.code) +
-        b.precipitation *
-        1.7 +
-        b.probability /
-        60;
+        b.precipitation * 1.7 +
+        b.probability / 60;
 
       return scoreB - scoreA;
     })[0].code;
@@ -5282,6 +5147,7 @@ function drawTemperature14(days){
   );
 
   const top = 14;
+
   const bottom =
     Math.max(
       24,
@@ -7320,12 +7186,9 @@ function contrastingTextColour(background){
     parseInt(match[3],16);
 
   const luminance =
-    .299 *
-    red +
-    .587 *
-    green +
-    .114 *
-    blue;
+    .299 * red +
+    .587 * green +
+    .114 * blue;
 
   return luminance < 138
     ? "#fff"
@@ -8586,17 +8449,11 @@ function showSearchResults(results){
       $("placeSearch").value =
         selectedPlace;
 
-      climateNormals =
-        null;
+      climateNormals = null;
+      climateCacheKey = "";
 
-      climateCacheKey =
-        "";
-
-      currentObservation =
-        null;
-
-      verifiedCurrent =
-        null;
+      currentObservation = null;
+      verifiedCurrent = null;
 
       closeSearchResults();
       loadAll();
@@ -8713,29 +8570,33 @@ async function loadAll(){
   $("locateButton").disabled =
     true;
 
+  const {
+    latitude,
+    longitude
+  } = coordinates();
+
+  const thisStationSequence =
+    ++stationCheckSequence;
+
+  currentObservation = null;
+  verifiedCurrent = null;
+
+  setStationStatusLoading();
+
   setStatus(
-    "Best Match, aktuelle Stationsmessungen, Luftqualität und verfügbare ENS-Modelle werden geladen …"
+    "Best Match, Luftqualität und verfügbare ENS-Modelle werden geladen …"
   );
 
   try{
-    const {
-      latitude,
-      longitude
-    } = coordinates();
-
-    const stationPromise =
-      shouldLoadDwdStation(latitude,longitude)
-        ? fetchNearbyStationObservation(
-            latitude,
-            longitude
-          )
-        : Promise.resolve(null);
-
+    /*
+      Die Stationsabfrage gehört bewusst nicht mehr zu diesem
+      blockierenden Promise.allSettled-Aufruf.
+      Das Dashboard wird daher sofort mit Best Match aufgebaut.
+    */
     const [
       forecastResult,
       airQualityResult,
-      ensemblesResult,
-      stationResult
+      ensemblesResult
     ] = await Promise.allSettled([
       fetchJson(
         forecastUrl(
@@ -8756,9 +8617,7 @@ async function loadAll(){
       fetchAllAvailableEnsembles(
         latitude,
         longitude
-      ),
-
-      stationPromise
+      )
     ]);
 
     if(forecastResult.status !== "fulfilled"){
@@ -8778,15 +8637,10 @@ async function loadAll(){
         ? ensemblesResult.value
         : [];
 
-    currentObservation =
-      stationResult.status === "fulfilled"
-        ? stationResult.value
-        : null;
-
     verifiedCurrent =
       verifyCurrentConditions(
         currentForecast,
-        currentObservation
+        null
       );
 
     if(!Number.isFinite(selectedElevation)){
@@ -8824,18 +8678,8 @@ async function loadAll(){
         }
       );
 
-    const stationStatus =
-      ["verified","station"].includes(
-        verifiedCurrent.quality
-      )
-        ? ` + DWD-Station ${currentObservation.stationName}`
-        : verifiedCurrent.quality === "blended"
-          ? " + plausibilisierte Stations-/Modelldaten"
-          : "";
-
     setStatus(
       "Best Match" +
-      stationStatus +
       (
         activeEnsembles.length
           ? ` + ${activeEnsembles.length} verfügbare ENS-Modelle`
@@ -8846,7 +8690,17 @@ async function loadAll(){
           ? " + Luftqualität"
           : ""
       ) +
-      " geladen."
+      " geladen. Stationsprüfung läuft im Hintergrund."
+    );
+
+    /*
+      Echte Stationsmessungen werden erst jetzt asynchron geprüft.
+      Die übrige Seite bleibt währenddessen vollständig nutzbar.
+    */
+    runStationCheckInBackground(
+      latitude,
+      longitude,
+      thisStationSequence
     );
   }catch(error){
     console.error(error);
@@ -8859,6 +8713,18 @@ async function loadAll(){
       ),
       true
     );
+
+    const stationStatus =
+      $("stationVerification");
+
+    stationStatus.className =
+      "station-verification unavailable";
+
+    $("stationStatusTitle").textContent =
+      "Stationsprüfung nicht gestartet";
+
+    $("stationStatusDetails").textContent =
+      "Zunächst müssen die Standortdaten erfolgreich geladen werden.";
   }finally{
     $("updateButton").disabled =
       false;
@@ -8911,17 +8777,11 @@ function locate(){
           ? position.coords.altitude
           : null;
 
-      currentObservation =
-        null;
+      currentObservation = null;
+      verifiedCurrent = null;
 
-      verifiedCurrent =
-        null;
-
-      climateNormals =
-        null;
-
-      climateCacheKey =
-        "";
+      climateNormals = null;
+      climateCacheKey = "";
 
       $("placeSearch").value =
         selectedPlace;
@@ -9080,8 +8940,10 @@ $("placeSearch").addEventListener("input",event=>{
   selectedPlace = "";
   selectedCountryCode = "";
   selectedElevation = null;
+
   currentObservation = null;
   verifiedCurrent = null;
+
   climateNormals = null;
   climateCacheKey = "";
 
