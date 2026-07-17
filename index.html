@@ -2,7 +2,10 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta
+  name="viewport"
+  content="width=device-width,initial-scale=1,viewport-fit=cover"
+>
 <title>Wetter-Dashboard</title>
 
 <style>
@@ -20,11 +23,6 @@
   --shower:#13bdb4;
   --red:#ed1b24;
   --shadow:0 10px 30px rgba(24,48,68,.09);
-
-  /*
-    Diese Werte werden von drawRain14() passend zur
-    tatsächlichen SVG-Zeichenfläche gesetzt.
-  */
   --rain-left:44px;
   --rain-right:8px;
 }
@@ -527,7 +525,33 @@ button{
   white-space:nowrap;
 }
 
-/* 14-Tage-Meteogramm */
+/* 14 Tage */
+
+.model-information{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:6px;
+  padding:8px 16px;
+  border-top:1px solid #e3e9ed;
+  border-bottom:1px solid #e3e9ed;
+  background:#f7fafc;
+  color:#586672;
+  font-size:10px;
+}
+
+.model-information strong{
+  color:#234b65;
+}
+
+.model-tag{
+  padding:3px 7px;
+  border:1px solid #c9d8e2;
+  border-radius:999px;
+  background:#fff;
+  color:#245675;
+  white-space:nowrap;
+}
 
 .meteogram-fit{
   position:relative;
@@ -672,11 +696,6 @@ button{
   min-height:185px;
 }
 
-/*
-  Die Niederschlagswahrscheinlichkeiten erhalten exakt dieselben
-  linken und rechten Innenabstände wie die Niederschlagsgrafik.
-  Dadurch liegt jeder Wert mittig unter dem zugehörigen Tagesbalken.
-*/
 .probability-grid{
   display:grid;
   grid-template-columns:repeat(14,minmax(0,1fr));
@@ -727,7 +746,7 @@ button{
   height:10px;
 }
 
-/* Diagrammkarten */
+/* Vorhersagekarten */
 
 .forecast-product{
   width:100%;
@@ -807,10 +826,6 @@ button{
   transition:transform .25s ease;
 }
 
-/*
-  Der Hinweis liegt nicht mehr über dem Diagramm,
-  sondern in einer eigenen Zeile unterhalb des Inhalts.
-*/
 .chart-fit-control{
   display:none;
   width:100%;
@@ -826,11 +841,6 @@ button{
 
 .chart-fit-control:hover{
   background:#e8f2f8;
-}
-
-.chart-fit-control:focus-visible{
-  outline:3px solid rgba(18,97,143,.35);
-  outline-offset:-3px;
 }
 
 .chart-fit-control .fit-icon{
@@ -851,12 +861,43 @@ button{
 }
 
 .chart-note{
-  padding:7px 16px 11px;
+  padding:8px 16px 11px;
   color:#6d7881;
   font-size:11px;
+  line-height:1.4;
 }
 
-/* Mobile 24h */
+/* 5-Tage-Beschriftungslegende */
+
+.five-day-legend{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:7px 15px;
+  padding:9px 15px;
+  border-top:1px solid #e0e6ea;
+  background:#fbfcfd;
+  color:#40515e;
+  font-size:10px;
+}
+
+.five-day-legend-item{
+  display:flex;
+  align-items:center;
+  gap:5px;
+}
+
+.five-day-legend-line{
+  width:24px;
+  border-top:3px solid;
+}
+
+.five-day-legend-box{
+  width:18px;
+  height:9px;
+}
+
+/* Mobile 24 h */
 
 .hourly-mobile{
   display:none;
@@ -1247,6 +1288,8 @@ button{
   font-size:12px;
 }
 
+/* Tablet */
+
 @media(max-width:1150px){
   .dashboard-main{
     grid-template-columns:1fr;
@@ -1270,6 +1313,8 @@ button{
     grid-template-columns:1fr;
   }
 }
+
+/* Mobil */
 
 @media(max-width:700px){
   body{
@@ -1445,10 +1490,6 @@ button{
     display:none;
   }
 
-  /*
-    Der Umschaltknopf besitzt auf Mobilgeräten eine eigene Zeile.
-    Dadurch kann er keine Diagrammbeschriftung oder Werte verdecken.
-  */
   .chart-fit-control{
     display:block;
   }
@@ -1461,10 +1502,6 @@ button{
     transform:scale(.86);
   }
 
-  .meteogram-fit.fit-overview{
-    padding-bottom:0;
-  }
-
   .widget-layout{
     padding:10px;
   }
@@ -1473,10 +1510,16 @@ button{
     grid-template-columns:1fr;
   }
 
-  .legend{
+  .legend,
+  .five-day-legend{
     padding-right:10px;
     padding-left:10px;
     font-size:9px;
+  }
+
+  .model-information{
+    padding:7px 10px;
+    font-size:8px;
   }
 }
 
@@ -1678,6 +1721,8 @@ button{
 </section>
 
 <section id="forecast14Panel" class="panel">
+  <div id="ensembleModelInformation" class="model-information"></div>
+
   <div id="meteogram14Fit" class="meteogram-fit">
     <div id="meteogram14Canvas" class="meteogram-canvas">
       <section id="days14" class="day-grid"></section>
@@ -1782,9 +1827,61 @@ button{
         </span>
       </button>
 
+      <div class="five-day-legend">
+        <div class="five-day-legend-item">
+          <span
+            class="five-day-legend-line"
+            style="border-color:#ed1418">
+          </span>
+          Temperatur
+        </div>
+
+        <div class="five-day-legend-item">
+          <span
+            class="five-day-legend-line"
+            style="border-color:#1689ed">
+          </span>
+          Wind
+        </div>
+
+        <div class="five-day-legend-item">
+          <span
+            class="five-day-legend-line"
+            style="border-color:#248f91">
+          </span>
+          Böen
+        </div>
+
+        <div class="five-day-legend-item">
+          <span
+            class="five-day-legend-box"
+            style="background:#0865df">
+          </span>
+          Regen
+        </div>
+
+        <div class="five-day-legend-item">
+          <span
+            class="five-day-legend-box"
+            style="background:#14c6b5">
+          </span>
+          Schauer
+        </div>
+
+        <div class="five-day-legend-item">
+          <span
+            class="five-day-legend-box"
+            style="background:#777">
+          </span>
+          Wolkenschichten
+        </div>
+      </div>
+
       <div class="chart-note">
-        Hohe, mittlere und tiefe Bewölkung werden getrennt dargestellt.
-        Die Grafik wird automatisch an die Displaybreite angepasst.
+        Beschriftungen: Temperatur in °C, Niederschlag in mm/h,
+        Wolken in niedriger, mittlerer und hoher Schicht sowie Wind
+        und Böen in kt. Die Windzeichen zeigen in die Richtung,
+        in die der Wind weht.
       </div>
     </section>
   </div>
@@ -1796,7 +1893,9 @@ button{
       <header class="forecast-toolbar">
         <div>
           <h2>24-Stunden-Vorhersage</h2>
-          <div id="hourlyMeta" class="forecast-toolbar-meta">Best Match</div>
+          <div id="hourlyMeta" class="forecast-toolbar-meta">
+            Best Match
+          </div>
         </div>
 
         <div class="step-switch">
@@ -2042,39 +2141,216 @@ let selectedElevation = null;
 let currentForecast = null;
 let currentAirQuality = null;
 let current14Days = null;
+let activeEnsembles = [];
 let searchTimer = null;
 let hourlyStep = 1;
 
-const ENSEMBLES = [
+/*
+  Die Liste umfasst die von Open-Meteo angebotenen Ensemble-
+  Mean-Produkte. Für jedes Modell können mehrere mögliche API-
+  Bezeichner hinterlegt werden. Am jeweiligen Ort werden nur
+  diejenigen Modelle verwendet, deren Anfrage erfolgreich ist
+  und die verwertbare Daten liefern.
+*/
+const ENSEMBLE_MODEL_CANDIDATES = [
   {
-    id:"dwd_icon_eps_ensemble_mean_d2",
+    key:"icon-d2",
     label:"ICON-D2-EPS",
-    family:"d2"
+    family:"regional",
+    horizon:2,
+    priority:10,
+    aliases:[
+      "dwd_icon_eps_ensemble_mean_d2",
+      "icon_d2_ensemble_mean"
+    ]
   },
   {
-    id:"dwd_icon_eps_ensemble_mean_eu",
+    key:"icon-eu",
     label:"ICON-EU-EPS",
-    family:"eu"
+    family:"regional",
+    horizon:5,
+    priority:9,
+    aliases:[
+      "dwd_icon_eps_ensemble_mean_eu",
+      "icon_eu_ensemble_mean"
+    ]
   },
   {
-    id:"dwd_icon_eps_ensemble_mean_seamless",
+    key:"icon-seamless",
     label:"ICON-EPS Seamless",
-    family:"seamless"
+    family:"seamless",
+    horizon:8,
+    priority:8,
+    aliases:[
+      "dwd_icon_eps_ensemble_mean_seamless",
+      "icon_seamless_ensemble_mean"
+    ]
   },
   {
-    id:"ecmwf_ifs025_ensemble_mean",
+    key:"icon-global",
+    label:"ICON Global EPS",
+    family:"global",
+    horizon:8,
+    priority:7,
+    aliases:[
+      "dwd_icon_eps_ensemble_mean_global",
+      "icon_global_ensemble_mean"
+    ]
+  },
+  {
+    key:"gfs-seamless",
+    label:"GFS-ENS Seamless",
+    family:"seamless",
+    horizon:16,
+    priority:6,
+    aliases:[
+      "gfs_seamless_ensemble_mean",
+      "gfs_ensemble_mean_seamless"
+    ]
+  },
+  {
+    key:"gfs-025",
+    label:"GFS-ENS 0,25°",
+    family:"global",
+    horizon:10,
+    priority:6,
+    aliases:[
+      "gfs025_ensemble_mean",
+      "gfs_025_ensemble_mean"
+    ]
+  },
+  {
+    key:"gfs-05",
+    label:"GFS-ENS 0,5°",
+    family:"global-long",
+    horizon:35,
+    priority:4,
+    aliases:[
+      "gfs05_ensemble_mean",
+      "gfs_05_ensemble_mean"
+    ]
+  },
+  {
+    key:"aigefs",
+    label:"AIGEFS 0,25°",
+    family:"ai-global",
+    horizon:16,
+    priority:5,
+    aliases:[
+      "aigefs025_ensemble_mean",
+      "aigefs_025_ensemble_mean"
+    ]
+  },
+  {
+    key:"hgefs",
+    label:"HGEFS 0,25°",
+    family:"ai-global",
+    horizon:16,
+    priority:5,
+    aliases:[
+      "hgefs025_ensemble_mean",
+      "hgefs_025_ensemble_mean"
+    ]
+  },
+  {
+    key:"ecmwf-ifs",
     label:"ECMWF IFS-ENS",
-    family:"ecmwf"
+    family:"global",
+    horizon:15,
+    priority:9,
+    aliases:[
+      "ecmwf_ifs025_ensemble_mean",
+      "ecmwf_ifs_025_ensemble_mean"
+    ]
   },
   {
-    id:"ecmwf_aifs025_ensemble_mean",
+    key:"ecmwf-aifs",
     label:"ECMWF AIFS-ENS",
-    family:"aifs"
+    family:"ai-global",
+    horizon:15,
+    priority:8,
+    aliases:[
+      "ecmwf_aifs025_ensemble_mean",
+      "ecmwf_aifs_025_ensemble_mean"
+    ]
   },
   {
-    id:"gfs_seamless_ensemble_mean",
-    label:"GFS-ENS",
-    family:"gfs"
+    key:"gem",
+    label:"GEM Global Ensemble",
+    family:"global",
+    horizon:16,
+    priority:5,
+    aliases:[
+      "gem_global_ensemble_mean",
+      "gem_ensemble_mean"
+    ]
+  },
+  {
+    key:"bom",
+    label:"BOM ACCESS Global",
+    family:"global",
+    horizon:10,
+    priority:4,
+    aliases:[
+      "bom_access_global_ensemble_mean",
+      "bom_access_ensemble_mean"
+    ]
+  },
+  {
+    key:"ukmo-global",
+    label:"UKMO Global Ensemble",
+    family:"global",
+    horizon:8,
+    priority:5,
+    aliases:[
+      "ukmo_global_ensemble_mean",
+      "uk_metoffice_global_ensemble_mean"
+    ]
+  },
+  {
+    key:"ukmo-uk",
+    label:"UKMO UK 2 km Ensemble",
+    family:"regional",
+    horizon:3,
+    priority:10,
+    aliases:[
+      "ukmo_uk_ensemble_mean",
+      "uk_metoffice_uk_ensemble_mean"
+    ]
+  },
+  {
+    key:"swiss-ch1",
+    label:"MeteoSwiss ICON-CH1",
+    family:"regional",
+    horizon:2,
+    priority:10,
+    aliases:[
+      "meteoswiss_icon_ch1_ensemble_mean",
+      "icon_ch1_ensemble_mean"
+    ]
+  },
+  {
+    key:"swiss-ch2",
+    label:"MeteoSwiss ICON-CH2",
+    family:"regional",
+    horizon:2,
+    priority:10,
+    aliases:[
+      "meteoswiss_icon_ch2_ensemble_mean",
+      "icon_ch2_ensemble_mean"
+    ]
+  },
+  {
+    key:"weathernext2",
+    label:"Google WeatherNext 2",
+    family:"ai-global",
+    horizon:15,
+    priority:7,
+    aliases:[
+      "google_weathernext2_ensemble_mean",
+      "google_weather_next_2_ensemble_mean",
+      "weathernext2_ensemble_mean"
+    ]
   }
 ];
 
@@ -2204,7 +2480,7 @@ function airQualityUrl(latitude,longitude){
   );
 }
 
-function ensembleUrl(latitude,longitude,model){
+function ensembleMeanUrl(latitude,longitude,model){
   return (
     "https://ensemble-api.open-meteo.com/v1/ensemble?" +
     new URLSearchParams({
@@ -2255,6 +2531,63 @@ async function fetchJson(url,label){
   }
 
   return response.json();
+}
+
+function hasUsableEnsembleData(data){
+  const hourly = data?.hourly;
+
+  if(!hourly?.time?.length){
+    return false;
+  }
+
+  return (
+    hourly.temperature_2m?.some(Number.isFinite) &&
+    hourly.temperature_2m_spread?.some(Number.isFinite)
+  );
+}
+
+async function fetchAvailableEnsembleModel(
+  definition,
+  latitude,
+  longitude
+){
+  for(const alias of definition.aliases){
+    try{
+      const data = await fetchJson(
+        ensembleMeanUrl(latitude,longitude,alias),
+        definition.label
+      );
+
+      if(hasUsableEnsembleData(data)){
+        return {
+          definition,
+          modelId:alias,
+          data
+        };
+      }
+    }catch{}
+  }
+
+  return null;
+}
+
+async function fetchAllAvailableEnsembles(latitude,longitude){
+  const results = await Promise.allSettled(
+    ENSEMBLE_MODEL_CANDIDATES.map(definition=>
+      fetchAvailableEnsembleModel(
+        definition,
+        latitude,
+        longitude
+      )
+    )
+  );
+
+  return results
+    .filter(result=>
+      result.status === "fulfilled" &&
+      result.value
+    )
+    .map(result=>result.value);
 }
 
 function weatherIcon(code,isDay=true){
@@ -2310,10 +2643,7 @@ function average(values){
   const valid = values.filter(Number.isFinite);
 
   return valid.length
-    ? valid.reduce(
-        (sum,value)=>sum + value,
-        0
-      ) / valid.length
+    ? valid.reduce((total,value)=>total + value,0) / valid.length
     : 0;
 }
 
@@ -2322,13 +2652,15 @@ function maximum(values){
   return valid.length ? Math.max(...valid) : 0;
 }
 
+function minimum(values){
+  const valid = values.filter(Number.isFinite);
+  return valid.length ? Math.min(...valid) : 0;
+}
+
 function sum(values){
   return values
     .filter(Number.isFinite)
-    .reduce(
-      (total,value)=>total + value,
-      0
-    );
+    .reduce((total,value)=>total + value,0);
 }
 
 function circularMeanDegrees(values){
@@ -2339,25 +2671,16 @@ function circularMeanDegrees(values){
   }
 
   const x = valid.reduce(
-    (total,value)=>
-      total +
-      Math.cos(value * Math.PI / 180),
+    (total,value)=>total + Math.cos(value * Math.PI / 180),
     0
   );
 
   const y = valid.reduce(
-    (total,value)=>
-      total +
-      Math.sin(value * Math.PI / 180),
+    (total,value)=>total + Math.sin(value * Math.PI / 180),
     0
   );
 
-  return (
-    Math.atan2(y,x) *
-    180 /
-    Math.PI +
-    360
-  ) % 360;
+  return (Math.atan2(y,x) * 180 / Math.PI + 360) % 360;
 }
 
 function formatCoordinate(value,positive,negative){
@@ -2397,9 +2720,9 @@ function confidenceColor(value){
   return "#f23a3a";
 }
 
-function temperatureCellColor(value,minimum,maximumValue){
-  const range = Math.max(1,maximumValue - minimum);
-  const ratio = (value - minimum) / range;
+function temperatureCellColor(value,minValue,maxValue){
+  const range = Math.max(1,maxValue - minValue);
+  const ratio = (value - minValue) / range;
   const hue = 80 - ratio * 50;
   const lightness = 63 - ratio * 8;
 
@@ -2461,10 +2784,7 @@ function findCurrentHourlyIndex(){
 
   times.forEach((time,index)=>{
     const difference =
-      Math.abs(
-        new Date(time).getTime() -
-        now
-      );
+      Math.abs(new Date(time).getTime() - now);
 
     if(difference < nearestDifference){
       nearestDifference = difference;
@@ -2493,12 +2813,10 @@ function getRawHourlyRange(count,startAtCurrent=true){
     }
 
     const directionFrom =
-      hourly.wind_direction_10m?.[index] ??
-      0;
+      hourly.wind_direction_10m?.[index] ?? 0;
 
     result.push({
       index,
-      step:1,
       time:hourly.time[index],
       date:new Date(hourly.time[index]),
       temperature:hourly.temperature_2m?.[index],
@@ -2519,17 +2837,11 @@ function getRawHourlyRange(count,startAtCurrent=true){
       isDay:Number(hourly.is_day?.[index]) === 1,
 
       wind:
-        (
-          hourly.wind_speed_10m?.[index] ??
-          0
-        ) /
+        (hourly.wind_speed_10m?.[index] ?? 0) /
         KMH_PER_KNOT,
 
       gust:
-        (
-          hourly.wind_gusts_10m?.[index] ??
-          0
-        ) /
+        (hourly.wind_gusts_10m?.[index] ?? 0) /
         KMH_PER_KNOT,
 
       directionFrom,
@@ -2578,7 +2890,6 @@ function aggregateHourlyRange(hours,step){
 
     result.push({
       index:block[0].index,
-      step:block.length,
       time:block[0].time,
       date:block[0].date,
       temperature:average(block.map(hour=>hour.temperature)),
@@ -2594,20 +2905,13 @@ function aggregateHourlyRange(hours,step){
       cloudLow:average(block.map(hour=>hour.cloudLow)),
       cloudMid:average(block.map(hour=>hour.cloudMid)),
       cloudHigh:average(block.map(hour=>hour.cloudHigh)),
-
-      visibility:
-        Math.min(
-          ...block
-            .map(hour=>hour.visibility)
-            .filter(Number.isFinite)
-        ),
-
+      visibility:minimum(
+        block.map(hour=>hour.visibility)
+      ),
       code:representative.code,
-
       isDay:
         block.filter(hour=>hour.isDay).length >=
         block.length / 2,
-
       wind:average(block.map(hour=>hour.wind)),
       gust:maximum(block.map(hour=>hour.gust)),
       directionFrom,
@@ -2666,14 +2970,10 @@ function renderDashboard(){
       : "";
 
   $("sunriseValue").textContent =
-    formatTime(
-      currentForecast.daily?.sunrise?.[0]
-    );
+    formatTime(currentForecast.daily?.sunrise?.[0]);
 
   $("sunsetValue").textContent =
-    formatTime(
-      currentForecast.daily?.sunset?.[0]
-    );
+    formatTime(currentForecast.daily?.sunset?.[0]);
 
   $("metricGrid").innerHTML = [
     metricCard(
@@ -2881,15 +3181,10 @@ function renderHazardBanner(){
       : -99;
 
   const maximumGust =
-    Math.max(
-      0,
-      ...hours.map(hour=>hour.gust)
-    );
+    Math.max(0,...hours.map(hour=>hour.gust));
 
   const totalRain =
-    sum(
-      hours.map(hour=>hour.precipitation)
-    );
+    sum(hours.map(hour=>hour.precipitation));
 
   const visibility =
     hours
@@ -2965,11 +3260,7 @@ function renderHazardBanner(){
     });
   }
 
-  if(
-    hours.some(hour=>
-      [95,96,99].includes(hour.code)
-    )
-  ){
+  if(hours.some(hour=>[95,96,99].includes(hour.code))){
     hazards.push({
       severity:3,
       icon:"⛈️",
@@ -2978,11 +3269,7 @@ function renderHazardBanner(){
     });
   }
 
-  if(
-    hours.some(hour=>
-      [56,57,66,67].includes(hour.code)
-    )
-  ){
+  if(hours.some(hour=>[56,57,66,67].includes(hour.code))){
     hazards.push({
       severity:4,
       icon:"🧊",
@@ -2993,11 +3280,7 @@ function renderHazardBanner(){
 
   if(minimumVisibility <= 1000){
     hazards.push({
-      severity:
-        minimumVisibility <= 300
-          ? 4
-          : 2,
-
+      severity:minimumVisibility <= 300 ? 4 : 2,
       icon:"🌫️",
       title:"Sichtbehinderung",
       text:`Sichtweiten bis etwa ${Math.round(minimumVisibility)} m.`
@@ -3009,21 +3292,15 @@ function renderHazardBanner(){
 
   if(!hazards.length){
     banner.classList.add("none");
-
     $("hazardBannerIcon").textContent = "✅";
-
     $("hazardBannerTitle").textContent =
       "Keine markanten Wettergefahren erkannt";
-
     $("hazardBannerText").textContent =
       "Die automatisch ausgewerteten Wetterdaten zeigen derzeit keine auffälligen Signale.";
-
     return;
   }
 
-  hazards.sort(
-    (a,b)=>b.severity - a.severity
-  );
+  hazards.sort((a,b)=>b.severity - a.severity);
 
   const primary = hazards[0];
 
@@ -3033,11 +3310,8 @@ function renderHazardBanner(){
       : "warning"
   );
 
-  $("hazardBannerIcon").textContent =
-    primary.icon;
-
-  $("hazardBannerTitle").textContent =
-    primary.title;
+  $("hazardBannerIcon").textContent = primary.icon;
+  $("hazardBannerTitle").textContent = primary.title;
 
   $("hazardBannerText").textContent =
     primary.text +
@@ -3051,7 +3325,7 @@ function renderHazardBanner(){
     );
 }
 
-/* 14 Tage */
+/* 14-Tage-Daten */
 
 function weatherSeverity(code){
   if([95,96,99].includes(code)) return 9;
@@ -3065,6 +3339,16 @@ function weatherSeverity(code){
   if(code === 0) return 1;
 
   return 0;
+}
+
+function isWetWeather(code){
+  return [
+    51,53,55,56,57,
+    61,63,65,66,67,
+    71,73,75,77,
+    80,81,82,85,86,
+    95,96,99
+  ].includes(code);
 }
 
 function representativeWeatherCode(points){
@@ -3144,10 +3428,13 @@ function weatherIconsByDay(forecast){
 
     const showSecond =
       firstCode !== secondCode &&
-      Math.abs(
-        weatherSeverity(firstCode) -
-        weatherSeverity(secondCode)
-      ) >= 2;
+      (
+        Math.abs(
+          weatherSeverity(firstCode) -
+          weatherSeverity(secondCode)
+        ) >= 2 ||
+        isWetWeather(firstCode) !== isWetWeather(secondCode)
+      );
 
     result.set(date,{
       firstCode,
@@ -3189,23 +3476,13 @@ function dailyEnsembleData(ensemble){
       temperatureSpread,
 
       precipitationMean:
-        Number.isFinite(
-          hourly.precipitation?.[index]
-        )
-          ? Math.max(
-              0,
-              hourly.precipitation[index]
-            )
+        Number.isFinite(hourly.precipitation?.[index])
+          ? Math.max(0,hourly.precipitation[index])
           : 0,
 
       precipitationSpread:
-        Number.isFinite(
-          hourly.precipitation_spread?.[index]
-        )
-          ? Math.max(
-              0,
-              hourly.precipitation_spread[index]
-            )
+        Number.isFinite(hourly.precipitation_spread?.[index])
+          ? Math.max(0,hourly.precipitation_spread[index])
           : 0
     });
   });
@@ -3216,8 +3493,7 @@ function dailyEnsembleData(ensemble){
     const maximumHour =
       hours.reduce(
         (best,current)=>
-          current.temperatureMean >
-          best.temperatureMean
+          current.temperatureMean > best.temperatureMean
             ? current
             : best
       );
@@ -3225,8 +3501,7 @@ function dailyEnsembleData(ensemble){
     const minimumHour =
       hours.reduce(
         (best,current)=>
-          current.temperatureMean <
-          best.temperatureMean
+          current.temperatureMean < best.temperatureMean
             ? current
             : best
       );
@@ -3238,23 +3513,18 @@ function dailyEnsembleData(ensemble){
       lowSpread:minimumHour.temperatureSpread,
 
       rainMean:
-        sum(
-          hours.map(hour=>hour.precipitationMean)
-        ),
+        sum(hours.map(hour=>hour.precipitationMean)),
 
       rainSpread:
         Math.sqrt(
           sum(
             hours.map(hour=>
-              Math.pow(
-                hour.precipitationSpread,
-                2
-              )
+              Math.pow(hour.precipitationSpread,2)
             )
           )
         ) * 1.25,
 
-      family:ensemble.definition.family,
+      definition:ensemble.definition,
       label:ensemble.definition.label
     });
   });
@@ -3262,48 +3532,45 @@ function dailyEnsembleData(ensemble){
   return result;
 }
 
-function modelWeight(family,dayIndex){
-  switch(family){
-    case "d2":
-      if(dayIndex <= 1) return 8;
-      if(dayIndex === 2) return 1.5;
-      return 0;
-
-    case "eu":
-      if(dayIndex <= 1) return 4.5;
-      if(dayIndex === 2) return 6;
-      if(dayIndex === 3) return 5.5;
-      if(dayIndex === 4) return 4.5;
-      if(dayIndex === 5) return 2;
-      return 0;
-
-    case "seamless":
-      if(dayIndex <= 4) return 3;
-      if(dayIndex <= 6) return 2;
-      return .5;
-
-    case "ecmwf":
-      if(dayIndex <= 1) return 1.2;
-      if(dayIndex <= 3) return 2.2;
-      if(dayIndex <= 5) return 3.7;
-      if(dayIndex <= 9) return 5;
-      return 5.5;
-
-    case "aifs":
-      if(dayIndex <= 1) return .8;
-      if(dayIndex <= 3) return 1.6;
-      if(dayIndex <= 5) return 2.7;
-      if(dayIndex <= 9) return 4;
-      return 4.8;
-
-    case "gfs":
-      if(dayIndex <= 3) return 1;
-      if(dayIndex <= 6) return 2;
-      return 3;
-
-    default:
-      return 1;
+function ensembleWeight(definition,dayIndex){
+  if(dayIndex + 1 > definition.horizon){
+    return 0;
   }
+
+  let weight = definition.priority;
+
+  if(definition.family === "regional"){
+    if(dayIndex <= 1){
+      weight *= 1.4;
+    }else if(dayIndex >= 4){
+      weight *= .45;
+    }
+  }
+
+  if(definition.family === "seamless"){
+    if(dayIndex <= 6){
+      weight *= 1.15;
+    }
+  }
+
+  if(
+    definition.family === "global" ||
+    definition.family === "ai-global"
+  ){
+    if(dayIndex >= 5){
+      weight *= 1.25;
+    }
+  }
+
+  if(definition.family === "global-long"){
+    if(dayIndex < 7){
+      weight *= .55;
+    }else{
+      weight *= 1.15;
+    }
+  }
+
+  return weight;
 }
 
 function combineEnsembles(
@@ -3316,7 +3583,10 @@ function combineEnsembles(
     entries
       .map(entry=>({
         entry,
-        weight:modelWeight(entry.family,dayIndex)
+        weight:ensembleWeight(
+          entry.definition,
+          dayIndex
+        )
       }))
       .filter(item=>
         item.weight > 0 &&
@@ -3329,9 +3599,7 @@ function combineEnsembles(
   }
 
   const weightSum =
-    sum(
-      valid.map(item=>item.weight)
-    );
+    sum(valid.map(item=>item.weight));
 
   const mean =
     valid.reduce(
@@ -3347,21 +3615,14 @@ function combineEnsembles(
     valid.reduce(
       (total,item)=>{
         const modelDifference =
-          item.entry[meanKey] -
-          mean;
+          item.entry[meanKey] - mean;
 
         return (
           total +
           item.weight *
           (
-            Math.pow(
-              item.entry[spreadKey],
-              2
-            ) +
-            Math.pow(
-              modelDifference,
-              2
-            )
+            Math.pow(item.entry[spreadKey],2) +
+            Math.pow(modelDifference,2)
           )
         );
       },
@@ -3372,7 +3633,8 @@ function combineEnsembles(
   return {
     mean,
     spread:Math.sqrt(Math.max(.01,variance)),
-    labels:valid.map(item=>item.entry.label)
+    labels:valid.map(item=>item.entry.label),
+    modelCount:valid.length
   };
 }
 
@@ -3420,8 +3682,7 @@ function mergeForecastAndEnsembles(forecast,ensembles){
     const rain =
       Math.max(
         0,
-        daily.precipitation_sum?.[index] ??
-        0
+        daily.precipitation_sum?.[index] ?? 0
       );
 
     const fallbackSpread =
@@ -3472,6 +3733,22 @@ function mergeForecastAndEnsembles(forecast,ensembles){
         nightCode:daily.weather_code?.[index] ?? -1
       };
 
+    const usedModels = [
+      ...(high?.labels || []),
+      ...(low?.labels || []),
+      ...(rainEnsemble?.labels || [])
+    ].filter(
+      (value,arrayIndex,array)=>
+        array.indexOf(value) === arrayIndex
+    );
+
+    const modelCount =
+      Math.max(
+        high?.modelCount || 0,
+        low?.modelCount || 0,
+        rainEnsemble?.modelCount || 0
+      );
+
     return {
       date,
       dateObject:new Date(date + "T12:00:00"),
@@ -3514,35 +3791,62 @@ function mergeForecastAndEnsembles(forecast,ensembles){
       confidence:
         Math.max(
           5,
-          Math.round(
-            98 -
-            index * 1.7 -
-            Math.min(
-              62,
-              Math.max(highSpread,lowSpread) * 11
+          Math.min(
+            99,
+            Math.round(
+              99 -
+              index * 1.7 -
+              Math.min(
+                64,
+                Math.max(highSpread,lowSpread) * 10
+              ) +
+              Math.min(7,modelCount * .7)
             )
           )
         ),
 
-      labels:[
-        ...(high?.labels || []),
-        ...(low?.labels || []),
-        ...(rainEnsemble?.labels || [])
-      ].filter(
-        (value,arrayIndex,array)=>
-          array.indexOf(value) === arrayIndex
-      )
+      modelCount,
+      labels:usedModels
     };
   });
+}
+
+function renderEnsembleModelInformation(){
+  const container = $("ensembleModelInformation");
+
+  if(!activeEnsembles.length){
+    container.innerHTML = `
+      <strong>Vorhersagebasis:</strong>
+      <span class="model-tag">Best Match</span>
+      <span>
+        Keine zusätzlichen Ensemble-Mean-Produkte konnten
+        für diesen Ort geladen werden.
+      </span>
+    `;
+    return;
+  }
+
+  container.innerHTML = `
+    <strong>Vorhersagebasis:</strong>
+    <span class="model-tag">Best Match</span>
+    ${activeEnsembles
+      .map(ensemble=>`
+        <span
+          class="model-tag"
+          title="${ensemble.modelId}"
+        >
+          ${ensemble.definition.label}
+        </span>
+      `)
+      .join("")}
+  `;
 }
 
 function render14DayHeaders(days){
   $("days14").innerHTML =
     days.map(day=>{
       const weekend =
-        [0,6].includes(
-          day.dateObject.getDay()
-        );
+        [0,6].includes(day.dateObject.getDay());
 
       return `
         <div class="day-card${weekend ? " weekend" : ""}">
@@ -3602,7 +3906,11 @@ function renderConfidence(days){
     days.map(day=>`
       <div
         class="confidence-cell"
-        title="${day.labels.join(", ")}"
+        title="${
+          day.labels.length
+            ? `${day.modelCount} Modelle: ${day.labels.join(", ")}`
+            : "Best Match mit Ersatzstreuung"
+        }"
       >
         <div class="confidence-track">
           <div
@@ -3721,7 +4029,7 @@ function drawTemperature14(days){
   const bottom = Math.max(24,height * .1);
   const plotWidth = width - left - right;
   const graphHeight = height - top - bottom;
-  const columnWidth = plotWidth / NUMBER_OF_DAYS;
+  const columnWidth = plotWidth / days.length;
 
   const values = [
     ...days.map(day=>day.highOuterHigh),
@@ -3731,16 +4039,10 @@ function drawTemperature14(days){
   ];
 
   let minimumValue =
-    Math.floor(
-      Math.min(...values) -
-      1
-    );
+    Math.floor(Math.min(...values) - 1);
 
   let maximumValue =
-    Math.ceil(
-      Math.max(...values) +
-      1
-    );
+    Math.ceil(Math.max(...values) + 1);
 
   if(maximumValue - minimumValue < 10){
     maximumValue = minimumValue + 10;
@@ -3815,7 +4117,7 @@ function drawTemperature14(days){
     svg.appendChild(label);
   }
 
-  for(let index=0;index<=NUMBER_OF_DAYS;index++){
+  for(let index=0;index<=days.length;index++){
     const lineX =
       left +
       index *
@@ -3951,7 +4253,7 @@ function drawTemperature14(days){
   );
 }
 
-/* Niederschlag */
+/* 14-Tage-Niederschlag */
 
 function niceRainAxisMaximum(value){
   const padded =
@@ -4060,9 +4362,6 @@ function drawRain14(days){
       width * .008
     );
 
-  /*
-    Wahrscheinlichkeitswerte erhalten dieselben exakten Ränder.
-  */
   parent.style.setProperty(
     "--rain-left",
     `${left}px`
@@ -4248,9 +4547,6 @@ function drawRain14(days){
         )
       );
 
-    /*
-      Balken und graue Spanne nur bei berechnetem Niederschlag.
-    */
     if(hasRain){
       const barTop =
         y(deterministicRain);
@@ -4382,9 +4678,7 @@ function drawRain14(days){
 }
 
 function renderProbabilities(days){
-  const container = $("probability14");
-
-  container.innerHTML =
+  $("probability14").innerHTML =
     days.map((day,index)=>`
       <div
         class="probability"
@@ -4396,7 +4690,7 @@ function renderProbabilities(days){
     `).join("");
 }
 
-/* Canvas */
+/* Canvas-Hilfsfunktionen */
 
 function prepareResponsiveCanvas(
   canvas,
@@ -4425,8 +4719,7 @@ function prepareResponsiveCanvas(
   const ratio =
     Math.max(
       1,
-      window.devicePixelRatio ||
-      1
+      window.devicePixelRatio || 1
     );
 
   canvas.style.width = `${width}px`;
@@ -4702,6 +4995,27 @@ function drawCloudLayer(
   context.restore();
 }
 
+function drawRotatedAxisTitle(
+  context,
+  text,
+  x,
+  y,
+  fontSize,
+  color
+){
+  context.save();
+  context.translate(x,y);
+  context.rotate(-Math.PI / 2);
+  context.fillStyle = color;
+  context.font = `bold ${fontSize}px Arial`;
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.fillText(text,0,0);
+  context.restore();
+}
+
+/* Korrigiertes 5-Tage-Meteogramm */
+
 function drawFiveDayMeteogram(){
   if(!currentForecast){
     return;
@@ -4710,8 +5024,12 @@ function drawFiveDayMeteogram(){
   const hours =
     getRawHourlyRange(
       120,
-      false
+      true
     );
+
+  if(!hours.length){
+    return;
+  }
 
   const canvas =
     $("fiveDayCanvas");
@@ -4727,22 +5045,21 @@ function drawFiveDayMeteogram(){
     canvas,
     container,
     window.innerWidth <= 700
-      ? 1.05
-      : 1.75,
+      ? .88
+      : 1.52,
 
     window.innerWidth <= 700
-      ? 330
-      : 430,
+      ? 430
+      : 560,
 
     window.innerWidth <= 700
-      ? 520
-      : 760
+      ? 650
+      : 880
   );
 
-  const compact = width < 800;
-  const left = compact ? 34 : 55;
-  const right = compact ? 7 : 15;
-  const topHeader = compact ? 24 : 40;
+  const compact = width < 780;
+  const left = compact ? 42 : 72;
+  const right = compact ? 28 : 54;
   const graphWidth = width - left - right;
   const cellWidth = graphWidth / hours.length;
 
@@ -4752,23 +5069,17 @@ function drawFiveDayMeteogram(){
       (index + .5) *
       cellWidth;
 
-  const temperatureTop =
-    topHeader + 20;
+  const dateHeaderY = compact ? 17 : 23;
+  const timeHeaderY = compact ? 34 : 43;
 
-  const temperatureBottom =
-    height * .36;
+  const temperatureTop = compact ? 48 : 62;
+  const temperatureBottom = height * .35;
 
-  const cloudTop =
-    height * .43;
+  const cloudTop = height * .42;
+  const cloudBottom = height * .70;
 
-  const cloudBottom =
-    height * .69;
-
-  const windTop =
-    height * .77;
-
-  const windBottom =
-    height * .96;
+  const windTop = height * .78;
+  const windBottom = height * .95;
 
   context.fillStyle = "#fff";
   context.fillRect(0,0,width,height);
@@ -4811,14 +5122,189 @@ function drawFiveDayMeteogram(){
         temperatureTop
       );
 
+  /*
+    Tages- und Nachtflächen über alle Diagrammteile.
+  */
+  hours.forEach((hour,index)=>{
+    context.fillStyle =
+      hour.isDay
+        ? "rgba(233,245,177,.62)"
+        : "rgba(232,236,240,.52)";
+
+    context.fillRect(
+      left + index * cellWidth,
+      temperatureTop,
+      cellWidth + .5,
+      windBottom - temperatureTop
+    );
+  });
+
+  /*
+    Tagesspalten und Datumsbeschriftung.
+  */
+  let previousDateKey = "";
+
+  hours.forEach((hour,index)=>{
+    const dateKey =
+      hour.time.slice(0,10);
+
+    if(dateKey !== previousDateKey){
+      const remainingHours =
+        hours
+          .slice(index)
+          .findIndex(item=>
+            item.time.slice(0,10) !== dateKey
+          );
+
+      const dayLength =
+        remainingHours === -1
+          ? hours.length - index
+          : remainingHours;
+
+      const dayStartX =
+        left +
+        index *
+        cellWidth;
+
+      const dayWidth =
+        dayLength *
+        cellWidth;
+
+      context.strokeStyle = "#66727a";
+      context.lineWidth = 1;
+
+      context.beginPath();
+      context.moveTo(dayStartX,temperatureTop);
+      context.lineTo(dayStartX,windBottom);
+      context.stroke();
+
+      context.fillStyle =
+        [0,6].includes(hour.date.getDay())
+          ? "#c20e0e"
+          : "#17212a";
+
+      context.font =
+        `bold ${compact ? 9 : 14}px Arial`;
+
+      context.textAlign = "center";
+      context.textBaseline = "middle";
+
+      context.fillText(
+        hour.date.toLocaleDateString(
+          "de-DE",
+          {
+            weekday:compact ? "short" : "long",
+            day:"2-digit",
+            month:"2-digit"
+          }
+        ),
+        dayStartX + dayWidth / 2,
+        dateHeaderY
+      );
+
+      previousDateKey = dateKey;
+    }
+  });
+
+  context.strokeStyle = "#66727a";
+  context.beginPath();
+  context.moveTo(left + graphWidth,temperatureTop);
+  context.lineTo(left + graphWidth,windBottom);
+  context.stroke();
+
+  /*
+    Stundenbeschriftungen.
+  */
+  const hourLabelStep =
+    compact ? 12 : 6;
+
+  hours.forEach((hour,index)=>{
+    if(
+      index % hourLabelStep !== 0 &&
+      hour.date.getHours() !== 0
+    ){
+      return;
+    }
+
+    context.fillStyle = "#384650";
+    context.font = `${compact ? 7 : 10}px Arial`;
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+
+    context.fillText(
+      String(hour.date.getHours()).padStart(2,"0"),
+      x(index),
+      timeHeaderY
+    );
+
+    context.strokeStyle = "rgba(75,88,98,.22)";
+    context.lineWidth = .7;
+
+    context.beginPath();
+    context.moveTo(x(index),temperatureTop);
+    context.lineTo(x(index),windBottom);
+    context.stroke();
+  });
+
+  /*
+    Temperaturgitternetz und Achse.
+  */
+  const temperatureStep =
+    temperatureRange > 18
+      ? 5
+      : 2;
+
+  for(
+    let value =
+      Math.ceil(minimumTemperature / temperatureStep) *
+      temperatureStep;
+
+    value <= maximumTemperature;
+
+    value += temperatureStep
+  ){
+    const lineY = yTemperature(value);
+
+    context.strokeStyle = "rgba(61,75,85,.38)";
+    context.lineWidth = .8;
+
+    context.beginPath();
+    context.moveTo(left,lineY);
+    context.lineTo(left + graphWidth,lineY);
+    context.stroke();
+
+    context.fillStyle = "#1f2b34";
+    context.font = `${compact ? 8 : 11}px Arial`;
+    context.textAlign = "right";
+    context.textBaseline = "middle";
+
+    context.fillText(
+      `${value}`,
+      left - 6,
+      lineY
+    );
+  }
+
+  drawRotatedAxisTitle(
+    context,
+    "Temperatur (°C)",
+    compact ? 10 : 18,
+    (temperatureTop + temperatureBottom) / 2,
+    compact ? 9 : 13,
+    "#1b2831"
+  );
+
+  /*
+    Temperaturfarbbänder.
+  */
   const thermalBands = [
-    "#0b956a",
-    "#087d46",
-    "#38ac27",
-    "#8be31f",
-    "#e7f01b",
-    "#ffd516",
-    "#ef8b17"
+    "#07976e",
+    "#087f48",
+    "#39aa28",
+    "#8ee31f",
+    "#e8ef19",
+    "#ffd513",
+    "#f19a17"
   ];
 
   thermalBands.forEach((color,index)=>{
@@ -4834,7 +5320,7 @@ function drawFiveDayMeteogram(){
       (index + 1) /
       thermalBands.length;
 
-    context.globalAlpha = .76;
+    context.globalAlpha = .70;
     context.fillStyle = color;
 
     context.fillRect(
@@ -4848,63 +5334,9 @@ function drawFiveDayMeteogram(){
 
   context.globalAlpha = 1;
 
-  for(let index=0;index<=5;index++){
-    const lineX =
-      left +
-      index *
-      graphWidth /
-      5;
-
-    context.strokeStyle =
-      "rgba(45,55,65,.3)";
-
-    context.lineWidth = 1;
-
-    context.beginPath();
-    context.moveTo(lineX,temperatureTop);
-    context.lineTo(lineX,windBottom);
-    context.stroke();
-
-    if(index < 5){
-      const dateHour =
-        hours[
-          Math.min(
-            index * 24,
-            hours.length - 1
-          )
-        ];
-
-      const middleX =
-        left +
-        (index + .5) *
-        graphWidth /
-        5;
-
-      context.fillStyle =
-        [0,6].includes(dateHour.date.getDay())
-          ? "#c91919"
-          : "#111";
-
-      context.font =
-        `${compact ? 10 : 15}px Arial`;
-
-      context.textAlign = "center";
-
-      context.fillText(
-        dateHour.date.toLocaleDateString(
-          "de-DE",
-          {
-            weekday:compact ? "short" : "long",
-            day:"2-digit",
-            month:"2-digit"
-          }
-        ),
-        middleX,
-        compact ? 14 : 22
-      );
-    }
-  }
-
+  /*
+    Temperaturkurve.
+  */
   drawSmoothLine(
     context,
 
@@ -4917,8 +5349,71 @@ function drawFiveDayMeteogram(){
     compact ? 2.2 : 3.6
   );
 
+  /*
+    Tages-Minimum und -Maximum mit Beschriftung.
+  */
+  const dayGroups = new Map();
+
+  hours.forEach((hour,index)=>{
+    const key = hour.time.slice(0,10);
+
+    if(!dayGroups.has(key)){
+      dayGroups.set(key,[]);
+    }
+
+    dayGroups.get(key).push({
+      hour,
+      index
+    });
+  });
+
+  dayGroups.forEach(points=>{
+    const maximumPoint =
+      points.reduce((best,current)=>
+        current.hour.temperature >
+        best.hour.temperature
+          ? current
+          : best
+      );
+
+    const minimumPoint =
+      points.reduce((best,current)=>
+        current.hour.temperature <
+        best.hour.temperature
+          ? current
+          : best
+      );
+
+    context.fillStyle = "#be120e";
+    context.font =
+      `bold ${compact ? 9 : 13}px Arial`;
+
+    context.textAlign = "center";
+    context.textBaseline = "bottom";
+
+    context.fillText(
+      `${Math.round(maximumPoint.hour.temperature)}°`,
+      x(maximumPoint.index),
+      yTemperature(maximumPoint.hour.temperature) -
+      (compact ? 3 : 5)
+    );
+
+    context.fillStyle = "#065ba7";
+    context.textBaseline = "top";
+
+    context.fillText(
+      `${Math.round(minimumPoint.hour.temperature)}°`,
+      x(minimumPoint.index),
+      yTemperature(minimumPoint.hour.temperature) +
+      (compact ? 4 : 6)
+    );
+  });
+
+  /*
+    Wetterpiktogramme.
+  */
   const iconStep =
-    compact ? 6 : 3;
+    compact ? 8 : 4;
 
   hours.forEach((hour,index)=>{
     if(index % iconStep !== 0){
@@ -4931,20 +5426,26 @@ function drawFiveDayMeteogram(){
       hour.isDay,
       x(index),
 
-      yTemperature(hour.temperature) -
-      (compact ? 10 : 18),
+      Math.max(
+        temperatureTop + 12,
+        yTemperature(hour.temperature) -
+        (compact ? 14 : 23)
+      ),
 
       compact
         ? hour.isDay
           ? 11
           : 9
         : hour.isDay
-          ? 20
-          : 16
+          ? 19
+          : 15
     );
   });
 
-  context.fillStyle = "#fafafa";
+  /*
+    Wolken- und Niederschlagsbereich.
+  */
+  context.fillStyle = "rgba(252,252,252,.54)";
 
   context.fillRect(
     left,
@@ -4961,26 +5462,106 @@ function drawFiveDayMeteogram(){
       )
     );
 
+  const rainAxisMaximum =
+    maximumRain <= 2
+      ? 2
+      : maximumRain <= 5
+        ? 5
+        : Math.ceil(maximumRain / 5) * 5;
+
   const yRain =
     value=>
       cloudBottom -
       value /
-      maximumRain *
+      rainAxisMaximum *
       (
         cloudBottom -
         cloudTop -
-        5
+        8
       );
+
+  const rainStep =
+    rainAxisMaximum <= 2
+      ? .5
+      : rainAxisMaximum <= 5
+        ? 1
+        : 2;
+
+  for(
+    let value=0;
+    value<=rainAxisMaximum;
+    value+=rainStep
+  ){
+    const lineY = yRain(value);
+
+    context.strokeStyle = "rgba(61,75,85,.30)";
+    context.lineWidth = .7;
+
+    context.beginPath();
+    context.moveTo(left,lineY);
+    context.lineTo(left + graphWidth,lineY);
+    context.stroke();
+
+    context.fillStyle = "#24333c";
+    context.font = `${compact ? 7 : 10}px Arial`;
+    context.textAlign = "right";
+    context.textBaseline = "middle";
+
+    context.fillText(
+      Number.isInteger(value)
+        ? String(value)
+        : value.toFixed(1).replace(".",","),
+
+      left - 6,
+      lineY
+    );
+  }
+
+  drawRotatedAxisTitle(
+    context,
+    "Niederschlag (mm/h)",
+    compact ? 10 : 18,
+    (cloudTop + cloudBottom) / 2,
+    compact ? 8 : 12,
+    "#1b2831"
+  );
+
+  const layerLabelX =
+    left + graphWidth + 5;
+
+  context.textAlign = "left";
+  context.font = `${compact ? 7 : 9}px Arial`;
+
+  context.fillStyle = "#72787d";
+  context.fillText(
+    "hoch",
+    layerLabelX,
+    cloudTop + (cloudBottom - cloudTop) * .18
+  );
+
+  context.fillStyle = "#595e63";
+  context.fillText(
+    "mittel",
+    layerLabelX,
+    cloudTop + (cloudBottom - cloudTop) * .48
+  );
+
+  context.fillStyle = "#353a3e";
+  context.fillText(
+    "tief",
+    layerLabelX,
+    cloudTop + (cloudBottom - cloudTop) * .78
+  );
 
   hours.forEach((hour,index)=>{
     const layerWidth =
       cellWidth *
-      (compact ? 4 : 2.2);
+      (compact ? 6 : 3.1);
 
     drawCloudLayer(
       context,
       x(index),
-      cloudTop + (cloudBottom - cloudTop) * .17,
+      cloudTop + (cloudBottom - cloudTop) * .15,
       layerWidth,
       hour.cloudHigh,
       "high"
@@ -4989,7 +5570,7 @@ function drawFiveDayMeteogram(){
     drawCloudLayer(
       context,
       x(index),
-      cloudTop + (cloudBottom - cloudTop) * .46,
+      cloudTop + (cloudBottom - cloudTop) * .43,
       layerWidth,
       hour.cloudMid,
       "mid"
@@ -4998,17 +5579,17 @@ function drawFiveDayMeteogram(){
     drawCloudLayer(
       context,
       x(index),
-      cloudTop + (cloudBottom - cloudTop) * .75,
+      cloudTop + (cloudBottom - cloudTop) * .70,
       layerWidth,
       hour.cloudLow,
       "low"
     );
 
-    if(hour.precipitation > 0){
+    if(hour.precipitation > .01){
       const barWidth =
         Math.max(
           1,
-          cellWidth * .6
+          cellWidth * .72
         );
 
       context.fillStyle =
@@ -5025,7 +5606,10 @@ function drawFiveDayMeteogram(){
     }
   });
 
-  context.fillStyle = "#fafafa";
+  /*
+    Windbereich.
+  */
+  context.fillStyle = "rgba(252,252,252,.60)";
 
   context.fillRect(
     left,
@@ -5036,14 +5620,20 @@ function drawFiveDayMeteogram(){
 
   const maximumWind =
     Math.max(
-      15,
+      10,
       Math.ceil(
         maximum(
           hours.map(hour=>hour.gust)
         ) /
         5
-      ) * 5
+      ) *
+      5
     );
+
+  const windStep =
+    maximumWind <= 20
+      ? 5
+      : 10;
 
   const yWind =
     value=>
@@ -5053,8 +5643,44 @@ function drawFiveDayMeteogram(){
       (
         windBottom -
         windTop -
-        3
+        8
       );
+
+  for(
+    let value=0;
+    value<=maximumWind;
+    value+=windStep
+  ){
+    const lineY = yWind(value);
+
+    context.strokeStyle = "rgba(61,75,85,.30)";
+    context.lineWidth = .7;
+
+    context.beginPath();
+    context.moveTo(left,lineY);
+    context.lineTo(left + graphWidth,lineY);
+    context.stroke();
+
+    context.fillStyle = "#24333c";
+    context.font = `${compact ? 7 : 10}px Arial`;
+    context.textAlign = "right";
+    context.textBaseline = "middle";
+
+    context.fillText(
+      String(value),
+      left - 6,
+      lineY
+    );
+  }
+
+  drawRotatedAxisTitle(
+    context,
+    "Windgeschwindigkeit (kt)",
+    compact ? 10 : 18,
+    (windTop + windBottom) / 2,
+    compact ? 8 : 12,
+    "#1689ed"
+  );
 
   drawSmoothLine(
     context,
@@ -5081,7 +5707,7 @@ function drawFiveDayMeteogram(){
   );
 
   const arrowStep =
-    compact ? 8 : 4;
+    compact ? 12 : 6;
 
   hours.forEach((hour,index)=>{
     if(index % arrowStep !== 0){
@@ -5091,36 +5717,32 @@ function drawFiveDayMeteogram(){
     drawWindArrow(
       context,
       x(index),
-      windTop + (compact ? 8 : 14),
+      windTop + (compact ? 9 : 15),
       hour.directionTo,
-      compact ? 8 : 14,
+      compact ? 8 : 13,
       "#111",
-      compact ? 1 : 1.6
+      compact ? 1 : 1.5
     );
   });
 
-  context.fillStyle = "#111";
-  context.font = `${compact ? 8 : 12}px Arial`;
-  context.textAlign = "right";
+  /*
+    Rechte Achsenbeschriftung für Böen.
+  */
+  context.fillStyle = "#248f91";
+  context.font =
+    `bold ${compact ? 7 : 10}px Arial`;
+
+  context.textAlign = "left";
+  context.textBaseline = "middle";
 
   context.fillText(
-    "°C",
-    left - 4,
-    temperatureTop + 10
-  );
-
-  context.fillText(
-    "mm",
-    left - 4,
-    cloudTop + 10
-  );
-
-  context.fillText(
-    "kt",
-    left - 4,
+    "Böen",
+    left + graphWidth + 5,
     windTop + 10
   );
 }
+
+/* 24 Stunden */
 
 function drawHourlyDesktop(){
   if(!currentForecast){
@@ -5442,7 +6064,6 @@ function drawHourlyDesktop(){
     );
 
     context.fillStyle = "#fff";
-
     context.font =
       `bold ${compact ? 7 : 10}px Arial`;
 
@@ -5487,10 +6108,8 @@ function drawHourlyDesktop(){
   });
 
   context.fillStyle = "#164f73";
-
   context.font =
     `bold ${compact ? 7 : 10}px Arial`;
-
   context.textAlign = "right";
 
   context.fillText(
@@ -6340,7 +6959,7 @@ async function loadAll(){
   $("locateButton").disabled = true;
 
   setStatus(
-    "Aktuelle Wetter-, Luftqualitäts- und Ensemble-Daten werden geladen …"
+    "Best Match, Luftqualität und verfügbare ENS-Modelle werden geladen …"
   );
 
   try{
@@ -6350,10 +6969,10 @@ async function loadAll(){
     } = coordinates();
 
     const [
-      forecast,
+      forecastResult,
       airQualityResult,
-      ensembleResults
-    ] = await Promise.all([
+      ensembleResult
+    ] = await Promise.allSettled([
       fetchJson(
         forecastUrl(
           latitude,
@@ -6363,66 +6982,53 @@ async function loadAll(){
         "Best Match"
       ),
 
-      Promise.allSettled([
-        fetchJson(
-          airQualityUrl(
-            latitude,
-            longitude
-          ),
-          "Luftqualität"
-        )
-      ]),
+      fetchJson(
+        airQualityUrl(
+          latitude,
+          longitude
+        ),
+        "Luftqualität"
+      ),
 
-      Promise.allSettled(
-        ENSEMBLES.map(
-          async definition=>({
-            definition,
-
-            data:
-              await fetchJson(
-                ensembleUrl(
-                  latitude,
-                  longitude,
-                  definition.id
-                ),
-                definition.label
-              )
-          })
-        )
+      fetchAllAvailableEnsembles(
+        latitude,
+        longitude
       )
     ]);
 
-    const ensembles =
-      ensembleResults
-        .filter(result=>
-          result.status === "fulfilled"
-        )
-        .map(result=>
-          result.value
-        );
+    if(forecastResult.status !== "fulfilled"){
+      throw forecastResult.reason;
+    }
 
-    currentForecast = forecast;
+    currentForecast =
+      forecastResult.value;
 
     currentAirQuality =
-      airQualityResult[0]?.status === "fulfilled"
-        ? airQualityResult[0].value
+      airQualityResult.status === "fulfilled"
+        ? airQualityResult.value
         : null;
+
+    activeEnsembles =
+      ensembleResult.status === "fulfilled"
+        ? ensembleResult.value
+        : [];
 
     if(!Number.isFinite(selectedElevation)){
       selectedElevation =
-        Number.isFinite(forecast.elevation)
-          ? forecast.elevation
+        Number.isFinite(currentForecast.elevation)
+          ? currentForecast.elevation
           : null;
     }
 
     current14Days =
       mergeForecastAndEnsembles(
-        forecast,
-        ensembles
+        currentForecast,
+        activeEnsembles
       );
 
     updateHeader();
     renderDashboard();
+    renderEnsembleModelInformation();
     render14DayHeaders(current14Days);
     renderConfidence(current14Days);
     renderProbabilities(current14Days);
@@ -6446,9 +7052,9 @@ async function loadAll(){
     setStatus(
       "Best Match" +
       (
-        ensembles.length
-          ? ` + ${ensembles.length} Ensembleprodukte`
-          : " · Ensemble-Rückfallbereiche"
+        activeEnsembles.length
+          ? ` + ${activeEnsembles.length} am Ort verfügbare ENS-Modelle`
+          : " · keine zusätzlichen ENS-Modelle verfügbar"
       ) +
       (
         currentAirQuality
@@ -6462,7 +7068,10 @@ async function loadAll(){
 
     setStatus(
       "Fehler: " +
-      error.message,
+      (
+        error?.message ||
+        String(error)
+      ),
       true
     );
   }finally{
