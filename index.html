@@ -22,6 +22,8 @@
   --rain:#145bea;
   --shower:#13bdb4;
   --red:#ed1b24;
+  --green:#18804b;
+  --amber:#a76900;
   --shadow:0 10px 30px rgba(24,48,68,.09);
 
   --plot-left:44px;
@@ -319,6 +321,10 @@ button{
 /* Dashboard */
 
 .dashboard-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
   margin-bottom:10px;
 }
 
@@ -331,6 +337,37 @@ button{
   margin-top:3px;
   color:var(--muted);
   font-size:12px;
+}
+
+.current-quality{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  max-width:520px;
+  padding:7px 10px;
+  border:1px solid #c8d6df;
+  border-radius:999px;
+  background:#f4f8fa;
+  color:#35505f;
+  font-size:10px;
+  line-height:1.25;
+}
+
+.current-quality.verified{
+  border-color:#b6d7c4;
+  background:#eff9f3;
+  color:#1f6640;
+}
+
+.current-quality.partial{
+  border-color:#ead4a1;
+  background:#fff9e8;
+  color:#765100;
+}
+
+.current-quality-icon{
+  flex:0 0 auto;
+  font-size:15px;
 }
 
 .dashboard-main{
@@ -389,6 +426,7 @@ button{
 }
 
 .metric-card{
+  position:relative;
   min-width:0;
   min-height:77px;
   padding:10px;
@@ -397,10 +435,29 @@ button{
   background:#fff;
 }
 
+.metric-card.station-value{
+  border-color:#b7d8c5;
+  background:
+    linear-gradient(145deg,#ffffff,#f3faf6);
+}
+
+.metric-card.station-value::after{
+  position:absolute;
+  top:7px;
+  right:7px;
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#27a260;
+  content:"";
+  box-shadow:0 0 0 3px rgba(39,162,96,.11);
+}
+
 .metric-top{
   display:flex;
   align-items:center;
   gap:6px;
+  padding-right:8px;
 }
 
 .metric-icon{
@@ -426,6 +483,97 @@ button{
   margin-top:2px;
   color:#586672;
   font-size:10px;
+  line-height:1.3;
+}
+
+.observation-panel{
+  display:none;
+  margin-top:11px;
+  padding:11px 13px;
+  border:1px solid #cfdce4;
+  border-radius:13px;
+  background:#f8fbfc;
+}
+
+.observation-panel.visible{
+  display:block;
+}
+
+.observation-panel.verified{
+  border-color:#b9d8c5;
+  background:#f1faf5;
+}
+
+.observation-panel.warning{
+  border-color:#ead4a1;
+  background:#fff9e8;
+}
+
+.observation-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.observation-title{
+  font-size:13px;
+  font-weight:850;
+}
+
+.observation-state{
+  flex:0 0 auto;
+  padding:3px 7px;
+  border-radius:999px;
+  background:#dfe9ee;
+  color:#385566;
+  font-size:9px;
+  font-weight:800;
+}
+
+.observation-panel.verified .observation-state{
+  background:#d8efe1;
+  color:#176039;
+}
+
+.observation-panel.warning .observation-state{
+  background:#f5e7ba;
+  color:#755000;
+}
+
+.observation-description{
+  margin-top:4px;
+  color:#53636e;
+  font-size:10px;
+  line-height:1.45;
+}
+
+.observation-grid{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:7px;
+  margin-top:9px;
+}
+
+.observation-item{
+  min-width:0;
+  padding:7px 8px;
+  border-radius:9px;
+  background:rgba(255,255,255,.72);
+}
+
+.observation-label{
+  color:#71808a;
+  font-size:9px;
+}
+
+.observation-value{
+  margin-top:2px;
+  overflow:hidden;
+  font-size:11px;
+  font-weight:800;
+  text-overflow:ellipsis;
+  white-space:nowrap;
 }
 
 .dashboard-lower{
@@ -1282,6 +1430,10 @@ button{
   .widget-layout{
     grid-template-columns:1fr;
   }
+
+  .observation-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
 }
 
 @media(max-width:700px){
@@ -1351,6 +1503,17 @@ button{
     padding:10px 11px 15px;
   }
 
+  .dashboard-head{
+    display:block;
+  }
+
+  .current-quality{
+    width:100%;
+    max-width:none;
+    margin-top:7px;
+    border-radius:10px;
+  }
+
   .hero-weather{
     grid-template-columns:68px 1fr;
     min-height:116px;
@@ -1368,6 +1531,24 @@ button{
   .metric-grid{
     grid-template-columns:1fr 1fr;
     gap:6px;
+  }
+
+  .metric-card{
+    min-height:69px;
+    padding:8px;
+  }
+
+  .observation-head{
+    display:block;
+  }
+
+  .observation-state{
+    display:inline-block;
+    margin-top:6px;
+  }
+
+  .observation-grid{
+    grid-template-columns:1fr 1fr;
   }
 
   .dashboard-hourly{
@@ -1574,9 +1755,19 @@ button{
 
 <section id="dashboardPanel" class="panel">
   <div class="panel-padding">
+
     <div class="dashboard-head">
-      <h2>Aktuelles Wetter</h2>
-      <div id="dashboardSubtitle" class="dashboard-subtitle"></div>
+      <div>
+        <h2>Aktuelles Wetter</h2>
+        <div id="dashboardSubtitle" class="dashboard-subtitle"></div>
+      </div>
+
+      <div id="currentQuality" class="current-quality">
+        <span id="currentQualityIcon" class="current-quality-icon">◌</span>
+        <span id="currentQualityText">
+          Aktuelle Daten werden geprüft.
+        </span>
+      </div>
     </div>
 
     <div class="dashboard-main">
@@ -1593,6 +1784,27 @@ button{
 
       <section id="metricGrid" class="metric-grid"></section>
     </div>
+
+    <section id="observationPanel" class="observation-panel">
+      <div class="observation-head">
+        <div>
+          <div class="observation-title">
+            Prüfung der aktuellen Messwerte
+          </div>
+
+          <div
+            id="observationDescription"
+            class="observation-description">
+          </div>
+        </div>
+
+        <div id="observationState" class="observation-state">
+          Prüfung
+        </div>
+      </div>
+
+      <div id="observationGrid" class="observation-grid"></div>
+    </section>
 
     <div class="dashboard-lower">
       <section class="sun-card">
@@ -1626,6 +1838,7 @@ button{
 
   <div id="meteogram14Fit" class="meteogram-fit">
     <div id="meteogram14Canvas" class="meteogram-canvas">
+
       <section id="days14" class="day-grid"></section>
 
       <div class="section-title">Ensemble-Konsistenz (%)</div>
@@ -1648,8 +1861,13 @@ button{
     class="chart-fit-control"
     type="button"
   >
-    <span class="fit-overview-label">↔ Vollständige Gesamtansicht</span>
-    <span class="fit-detail-label">↔ Größere Detailansicht</span>
+    <span class="fit-overview-label">
+      ↔ Vollständige Gesamtansicht
+    </span>
+
+    <span class="fit-detail-label">
+      ↔ Größere Detailansicht
+    </span>
   </button>
 
   <div class="legend">
@@ -1659,12 +1877,18 @@ button{
     </div>
 
     <div class="legend-item">
-      <span class="legend-box" style="background:rgba(237,27,36,.32)"></span>
+      <span
+        class="legend-box"
+        style="background:rgba(237,27,36,.32)">
+      </span>
       innerer Höchstwertbereich
     </div>
 
     <div class="legend-item">
-      <span class="legend-box" style="background:rgba(237,27,36,.16)"></span>
+      <span
+        class="legend-box"
+        style="background:rgba(237,27,36,.16)">
+      </span>
       äußerer Höchstwertbereich
     </div>
 
@@ -1683,6 +1907,7 @@ button{
 <section id="forecast5Panel" class="panel">
   <div class="forecast-product">
     <section class="forecast-shell">
+
       <header class="forecast-toolbar">
         <div>
           <h2>5-Tage-Meteogramm</h2>
@@ -1702,8 +1927,13 @@ button{
         class="chart-fit-control"
         type="button"
       >
-        <span class="fit-overview-label">↔ Vollständige Gesamtansicht</span>
-        <span class="fit-detail-label">↔ Größere Detailansicht</span>
+        <span class="fit-overview-label">
+          ↔ Vollständige Gesamtansicht
+        </span>
+
+        <span class="fit-detail-label">
+          ↔ Größere Detailansicht
+        </span>
       </button>
 
       <div class="five-day-legend">
@@ -1754,10 +1984,13 @@ button{
 <section id="forecast24Panel" class="panel">
   <div class="forecast-product">
     <section class="forecast-shell">
+
       <header class="forecast-toolbar">
         <div>
           <h2>24-Stunden-Vorhersage</h2>
-          <div id="hourlyMeta" class="forecast-toolbar-meta">Best Match</div>
+          <div id="hourlyMeta" class="forecast-toolbar-meta">
+            Best Match
+          </div>
         </div>
 
         <div class="step-switch">
@@ -1801,6 +2034,7 @@ button{
 
 <section id="widgetPanel" class="panel">
   <div class="widget-layout">
+
     <section class="widget-settings">
       <h2>Widget konfigurieren</h2>
 
@@ -1865,11 +2099,15 @@ button{
 
         <div class="setting-row">
           <div>
-            <label class="setting-label" for="widgetTemperatureUnit">
+            <label
+              class="setting-label"
+              for="widgetTemperatureUnit">
               Temperatur
             </label>
 
-            <select id="widgetTemperatureUnit" class="setting-control">
+            <select
+              id="widgetTemperatureUnit"
+              class="setting-control">
               <option value="celsius" selected>°C</option>
               <option value="fahrenheit">°F</option>
             </select>
@@ -1975,7 +2213,10 @@ button{
           Code kopieren
         </button>
 
-        <button id="downloadWidgetButton" class="action secondary" type="button">
+        <button
+          id="downloadWidgetButton"
+          class="action secondary"
+          type="button">
           PNG erstellen
         </button>
       </div>
@@ -1983,8 +2224,14 @@ button{
 
     <section class="widget-preview-card">
       <h2>Vorschau</h2>
+
       <div id="widgetPreview" class="widget-preview-wrap"></div>
-      <textarea id="widgetCode" class="widget-code" readonly></textarea>
+
+      <textarea
+        id="widgetCode"
+        class="widget-code"
+        readonly>
+      </textarea>
     </section>
   </div>
 </section>
@@ -2001,14 +2248,26 @@ const $ = id => document.getElementById(id);
 const SVG_NS = "http://www.w3.org/2000/svg";
 const KMH_PER_KNOT = 1.852;
 
+const MAX_STATION_DISTANCE_METRES = 50000;
+const PREFERRED_STATION_DISTANCE_METRES = 25000;
+const MAX_STATION_AGE_MINUTES = 150;
+const PREFERRED_STATION_AGE_MINUTES = 90;
+
 let selectedPlace = "";
+let selectedCountryCode = "";
 let selectedElevation = null;
+
 let currentForecast = null;
 let currentAirQuality = null;
 let current14Days = null;
+
 let activeEnsembles = [];
+let currentObservation = null;
+let verifiedCurrent = null;
+
 let climateNormals = null;
 let climateCacheKey = "";
+
 let searchTimer = null;
 let hourlyStep = 1;
 
@@ -2077,13 +2336,6 @@ const ENSEMBLE_MODELS = [
     priority:5
   },
   {
-    id:"aigefs025_ensemble_mean",
-    label:"AIGEFS 0,25°",
-    family:"ai-global",
-    horizon:16,
-    priority:6
-  },
-  {
     id:"hgefs025_ensemble_mean",
     label:"HGEFS 0,25°",
     family:"ai-global",
@@ -2096,13 +2348,6 @@ const ENSEMBLE_MODELS = [
     family:"global",
     horizon:16,
     priority:6
-  },
-  {
-    id:"bom_access_global_ensemble_mean",
-    label:"BOM ACCESS ENS",
-    family:"global",
-    horizon:10,
-    priority:5
   },
   {
     id:"ukmo_global_ensemble_mean",
@@ -2131,13 +2376,6 @@ const ENSEMBLE_MODELS = [
     family:"regional",
     horizon:5,
     priority:11
-  },
-  {
-    id:"google_weathernext2_ensemble_mean",
-    label:"WeatherNext 2 ENS",
-    family:"ai-global",
-    horizon:15,
-    priority:8
   }
 ];
 
@@ -2158,16 +2396,22 @@ function coordinates(){
     throw new Error("Ungültiger Längengrad.");
   }
 
-  return {latitude,longitude};
+  return {
+    latitude,
+    longitude
+  };
 }
 
 function forecastUrl(latitude,longitude){
-  return "https://api.open-meteo.com/v1/forecast?" +
+  return (
+    "https://api.open-meteo.com/v1/forecast?" +
     new URLSearchParams({
       latitude:String(latitude),
       longitude:String(longitude),
       timezone:"auto",
       forecast_days:"14",
+      past_minutely_15:"1",
+      forecast_minutely_15:"4",
       models:"best_match",
 
       current:[
@@ -2180,9 +2424,24 @@ function forecastUrl(latitude,longitude){
         "weather_code",
         "cloud_cover",
         "pressure_msl",
+        "surface_pressure",
         "wind_speed_10m",
         "wind_direction_10m",
         "wind_gusts_10m"
+      ].join(","),
+
+      minutely_15:[
+        "temperature_2m",
+        "relative_humidity_2m",
+        "dew_point_2m",
+        "apparent_temperature",
+        "precipitation",
+        "rain",
+        "weather_code",
+        "wind_speed_10m",
+        "wind_direction_10m",
+        "wind_gusts_10m",
+        "is_day"
       ].join(","),
 
       hourly:[
@@ -2220,11 +2479,13 @@ function forecastUrl(latitude,longitude){
         "wind_gusts_10m_max",
         "wind_direction_10m_dominant"
       ].join(",")
-    });
+    })
+  );
 }
 
 function airQualityUrl(latitude,longitude){
-  return "https://air-quality-api.open-meteo.com/v1/air-quality?" +
+  return (
+    "https://air-quality-api.open-meteo.com/v1/air-quality?" +
     new URLSearchParams({
       latitude:String(latitude),
       longitude:String(longitude),
@@ -2239,11 +2500,24 @@ function airQualityUrl(latitude,longitude){
         "ozone",
         "uv_index"
       ].join(",")
-    });
+    })
+  );
+}
+
+function brightSkyCurrentUrl(latitude,longitude){
+  return (
+    "https://api.brightsky.dev/current_weather?" +
+    new URLSearchParams({
+      lat:String(latitude),
+      lon:String(longitude),
+      max_dist:String(MAX_STATION_DISTANCE_METRES)
+    })
+  );
 }
 
 function ensembleUrl(latitude,longitude,model){
-  return "https://ensemble-api.open-meteo.com/v1/ensemble?" +
+  return (
+    "https://ensemble-api.open-meteo.com/v1/ensemble?" +
     new URLSearchParams({
       latitude:String(latitude),
       longitude:String(longitude),
@@ -2257,11 +2531,13 @@ function ensembleUrl(latitude,longitude,model){
         "precipitation",
         "precipitation_spread"
       ].join(",")
-    });
+    })
+  );
 }
 
 function climateUrl(latitude,longitude){
-  return "https://archive-api.open-meteo.com/v1/archive?" +
+  return (
+    "https://archive-api.open-meteo.com/v1/archive?" +
     new URLSearchParams({
       latitude:String(latitude),
       longitude:String(longitude),
@@ -2274,21 +2550,26 @@ function climateUrl(latitude,longitude){
         "temperature_2m_max",
         "temperature_2m_min"
       ].join(",")
-    });
+    })
+  );
 }
 
 function geocodingUrl(query){
-  return "https://geocoding-api.open-meteo.com/v1/search?" +
+  return (
+    "https://geocoding-api.open-meteo.com/v1/search?" +
     new URLSearchParams({
       name:query,
       count:"10",
       language:"de",
       format:"json"
-    });
+    })
+  );
 }
 
 async function fetchJson(url,label){
-  const response = await fetch(url,{cache:"no-store"});
+  const response = await fetch(url,{
+    cache:"no-store"
+  });
 
   if(!response.ok){
     let reason = "";
@@ -2334,6 +2615,580 @@ async function mapWithConcurrency(items,limit,worker){
   return results;
 }
 
+function isLikelyGermany(latitude,longitude){
+  return (
+    latitude >= 47.0 &&
+    latitude <= 55.2 &&
+    longitude >= 5.5 &&
+    longitude <= 15.6
+  );
+}
+
+function shouldLoadDwdStation(latitude,longitude){
+  return (
+    selectedCountryCode === "DE" ||
+    (
+      !selectedCountryCode &&
+      isLikelyGermany(latitude,longitude)
+    )
+  );
+}
+
+function clamp(value,minValue,maxValue){
+  return Math.max(
+    minValue,
+    Math.min(maxValue,value)
+  );
+}
+
+function validNumber(value){
+  return Number.isFinite(Number(value))
+    ? Number(value)
+    : null;
+}
+
+function minutesSince(timestamp){
+  if(!timestamp){
+    return Infinity;
+  }
+
+  const value = new Date(timestamp).getTime();
+
+  if(!Number.isFinite(value)){
+    return Infinity;
+  }
+
+  return Math.max(
+    0,
+    (Date.now() - value) / 60000
+  );
+}
+
+function dewPointFromTemperatureAndHumidity(
+  temperature,
+  relativeHumidity
+){
+  if(
+    !Number.isFinite(temperature) ||
+    !Number.isFinite(relativeHumidity) ||
+    relativeHumidity <= 0
+  ){
+    return null;
+  }
+
+  const humidity =
+    clamp(relativeHumidity,1,100);
+
+  const a = 17.62;
+  const b = 243.12;
+
+  const gamma =
+    Math.log(humidity / 100) +
+    a * temperature /
+    (b + temperature);
+
+  return (
+    b *
+    gamma /
+    (a - gamma)
+  );
+}
+
+function relativeHumidityFromTemperatureAndDewPoint(
+  temperature,
+  dewPoint
+){
+  if(
+    !Number.isFinite(temperature) ||
+    !Number.isFinite(dewPoint)
+  ){
+    return null;
+  }
+
+  const a = 17.62;
+  const b = 243.12;
+
+  const numerator =
+    Math.exp(
+      a * dewPoint /
+      (b + dewPoint)
+    );
+
+  const denominator =
+    Math.exp(
+      a * temperature /
+      (b + temperature)
+    );
+
+  return clamp(
+    100 * numerator / denominator,
+    0,
+    100
+  );
+}
+
+function normaliseStationObservation(data){
+  const weather =
+    data?.weather ||
+    data?.current_weather ||
+    null;
+
+  if(!weather){
+    return null;
+  }
+
+  const sources =
+    Array.isArray(data?.sources)
+      ? data.sources
+      : [];
+
+  const source =
+    sources.find(item=>
+      item.id === weather.source_id
+    ) ||
+    sources[0] ||
+    null;
+
+  const temperature =
+    validNumber(weather.temperature);
+
+  let relativeHumidity =
+    validNumber(weather.relative_humidity);
+
+  let dewPoint =
+    validNumber(weather.dew_point);
+
+  if(
+    !Number.isFinite(dewPoint) &&
+    Number.isFinite(temperature) &&
+    Number.isFinite(relativeHumidity)
+  ){
+    dewPoint =
+      dewPointFromTemperatureAndHumidity(
+        temperature,
+        relativeHumidity
+      );
+  }
+
+  if(
+    !Number.isFinite(relativeHumidity) &&
+    Number.isFinite(temperature) &&
+    Number.isFinite(dewPoint)
+  ){
+    relativeHumidity =
+      relativeHumidityFromTemperatureAndDewPoint(
+        temperature,
+        dewPoint
+      );
+  }
+
+  if(Number.isFinite(relativeHumidity)){
+    relativeHumidity =
+      clamp(relativeHumidity,0,100);
+  }
+
+  if(
+    Number.isFinite(dewPoint) &&
+    Number.isFinite(temperature) &&
+    dewPoint > temperature + .5
+  ){
+    dewPoint =
+      Math.min(
+        dewPoint,
+        temperature
+      );
+  }
+
+  const distance =
+    validNumber(source?.distance);
+
+  const height =
+    validNumber(source?.height);
+
+  const timestamp =
+    weather.timestamp ||
+    source?.last_record ||
+    null;
+
+  return {
+    temperature,
+    relativeHumidity,
+    dewPoint,
+    pressure:
+      validNumber(weather.pressure_msl),
+
+    windSpeed:
+      validNumber(weather.wind_speed),
+
+    windGust:
+      validNumber(weather.wind_gust_speed),
+
+    windDirection:
+      validNumber(weather.wind_direction),
+
+    timestamp,
+    ageMinutes:minutesSince(timestamp),
+    distance,
+    height,
+
+    stationName:
+      source?.station_name ||
+      "DWD-Wetterstation",
+
+    dwdStationId:
+      source?.dwd_station_id ||
+      "",
+
+    wmoStationId:
+      source?.wmo_station_id ||
+      "",
+
+    sourceId:
+      weather.source_id ||
+      source?.id ||
+      null
+  };
+}
+
+async function fetchNearbyStationObservation(latitude,longitude){
+  if(!shouldLoadDwdStation(latitude,longitude)){
+    return null;
+  }
+
+  const data = await fetchJson(
+    brightSkyCurrentUrl(latitude,longitude),
+    "DWD-Stationsmessung"
+  );
+
+  return normaliseStationObservation(data);
+}
+
+function nearestMinutelyObservation(forecast){
+  const minutely =
+    forecast?.minutely_15;
+
+  if(!minutely?.time?.length){
+    return null;
+  }
+
+  const now = Date.now();
+
+  let nearestIndex = -1;
+  let nearestDifference = Infinity;
+
+  minutely.time.forEach((time,index)=>{
+    const difference =
+      Math.abs(
+        new Date(time).getTime() -
+        now
+      );
+
+    if(difference < nearestDifference){
+      nearestDifference = difference;
+      nearestIndex = index;
+    }
+  });
+
+  if(nearestIndex < 0){
+    return null;
+  }
+
+  return {
+    time:minutely.time[nearestIndex],
+
+    temperature:
+      validNumber(
+        minutely.temperature_2m?.[nearestIndex]
+      ),
+
+    relativeHumidity:
+      validNumber(
+        minutely.relative_humidity_2m?.[nearestIndex]
+      ),
+
+    dewPoint:
+      validNumber(
+        minutely.dew_point_2m?.[nearestIndex]
+      ),
+
+    apparentTemperature:
+      validNumber(
+        minutely.apparent_temperature?.[nearestIndex]
+      ),
+
+    precipitation:
+      validNumber(
+        minutely.precipitation?.[nearestIndex]
+      ),
+
+    weatherCode:
+      minutely.weather_code?.[nearestIndex],
+
+    windSpeed:
+      validNumber(
+        minutely.wind_speed_10m?.[nearestIndex]
+      ),
+
+    windDirection:
+      validNumber(
+        minutely.wind_direction_10m?.[nearestIndex]
+      ),
+
+    windGust:
+      validNumber(
+        minutely.wind_gusts_10m?.[nearestIndex]
+      ),
+
+    isDay:
+      Number(
+        minutely.is_day?.[nearestIndex]
+      ) === 1
+  };
+}
+
+function verifyCurrentConditions(forecast,station){
+  const current =
+    forecast?.current ||
+    {};
+
+  const minutely =
+    nearestMinutelyObservation(forecast);
+
+  const modelTemperature =
+    Number.isFinite(minutely?.temperature)
+      ? minutely.temperature
+      : validNumber(current.temperature_2m);
+
+  const modelHumidity =
+    Number.isFinite(minutely?.relativeHumidity)
+      ? minutely.relativeHumidity
+      : validNumber(current.relative_humidity_2m);
+
+  let modelDewPoint =
+    Number.isFinite(minutely?.dewPoint)
+      ? minutely.dewPoint
+      : validNumber(current.dew_point_2m);
+
+  if(
+    !Number.isFinite(modelDewPoint) &&
+    Number.isFinite(modelTemperature) &&
+    Number.isFinite(modelHumidity)
+  ){
+    modelDewPoint =
+      dewPointFromTemperatureAndHumidity(
+        modelTemperature,
+        modelHumidity
+      );
+  }
+
+  const stationUsable =
+    Boolean(
+      station &&
+      Number.isFinite(station.relativeHumidity) &&
+      Number.isFinite(station.dewPoint) &&
+      station.ageMinutes <= MAX_STATION_AGE_MINUTES &&
+      (
+        !Number.isFinite(station.distance) ||
+        station.distance <= MAX_STATION_DISTANCE_METRES
+      )
+    );
+
+  const stationPreferred =
+    Boolean(
+      stationUsable &&
+      station.ageMinutes <= PREFERRED_STATION_AGE_MINUTES &&
+      (
+        !Number.isFinite(station.distance) ||
+        station.distance <= PREFERRED_STATION_DISTANCE_METRES
+      )
+    );
+
+  const humidityDifference =
+    stationUsable &&
+    Number.isFinite(modelHumidity)
+      ? Math.abs(
+          station.relativeHumidity -
+          modelHumidity
+        )
+      : null;
+
+  const dewPointDifference =
+    stationUsable &&
+    Number.isFinite(modelDewPoint)
+      ? Math.abs(
+          station.dewPoint -
+          modelDewPoint
+        )
+      : null;
+
+  const stationHumidityConsistent =
+    stationUsable
+      ? (
+          Number.isFinite(
+            dewPointFromTemperatureAndHumidity(
+              station.temperature,
+              station.relativeHumidity
+            )
+          )
+            ? Math.abs(
+                dewPointFromTemperatureAndHumidity(
+                  station.temperature,
+                  station.relativeHumidity
+                ) -
+                station.dewPoint
+              ) <= 2.5
+            : true
+        )
+      : false;
+
+  const strongDisagreement =
+    stationUsable &&
+    (
+      (
+        Number.isFinite(humidityDifference) &&
+        humidityDifference > 25
+      ) ||
+      (
+        Number.isFinite(dewPointDifference) &&
+        dewPointDifference > 5
+      )
+    );
+
+  let selectedHumidity =
+    modelHumidity;
+
+  let selectedDewPoint =
+    modelDewPoint;
+
+  let humiditySource =
+    "Open-Meteo Best Match";
+
+  let quality =
+    "model";
+
+  if(
+    stationUsable &&
+    stationHumidityConsistent &&
+    !strongDisagreement
+  ){
+    selectedHumidity =
+      station.relativeHumidity;
+
+    selectedDewPoint =
+      station.dewPoint;
+
+    humiditySource =
+      station.stationName;
+
+    quality =
+      stationPreferred
+        ? "verified"
+        : "station";
+  }else if(
+    stationUsable &&
+    stationHumidityConsistent &&
+    strongDisagreement &&
+    stationPreferred
+  ){
+    selectedHumidity =
+      (
+        station.relativeHumidity *
+        .65 +
+        modelHumidity *
+        .35
+      );
+
+    selectedDewPoint =
+      (
+        station.dewPoint *
+        .65 +
+        modelDewPoint *
+        .35
+      );
+
+    humiditySource =
+      `${station.stationName} / Best Match`;
+
+    quality =
+      "blended";
+  }
+
+  selectedHumidity =
+    Number.isFinite(selectedHumidity)
+      ? clamp(selectedHumidity,0,100)
+      : null;
+
+  if(
+    Number.isFinite(selectedDewPoint) &&
+    Number.isFinite(modelTemperature)
+  ){
+    selectedDewPoint =
+      Math.min(
+        selectedDewPoint,
+        modelTemperature
+      );
+  }
+
+  return {
+    modelTemperature,
+    modelHumidity,
+    modelDewPoint,
+
+    selectedHumidity,
+    selectedDewPoint,
+    humiditySource,
+
+    station,
+    stationUsable,
+    stationPreferred,
+    stationHumidityConsistent,
+    strongDisagreement,
+
+    humidityDifference,
+    dewPointDifference,
+    quality,
+
+    currentTime:
+      minutely?.time ||
+      current.time ||
+      null,
+
+    apparentTemperature:
+      Number.isFinite(minutely?.apparentTemperature)
+        ? minutely.apparentTemperature
+        : validNumber(current.apparent_temperature),
+
+    precipitation:
+      Number.isFinite(minutely?.precipitation)
+        ? minutely.precipitation
+        : validNumber(current.precipitation),
+
+    weatherCode:
+      minutely?.weatherCode ??
+      current.weather_code,
+
+    isDay:
+      minutely
+        ? minutely.isDay
+        : Number(current.is_day) === 1,
+
+    windSpeed:
+      Number.isFinite(minutely?.windSpeed)
+        ? minutely.windSpeed
+        : validNumber(current.wind_speed_10m),
+
+    windDirection:
+      Number.isFinite(minutely?.windDirection)
+        ? minutely.windDirection
+        : validNumber(current.wind_direction_10m),
+
+    windGust:
+      Number.isFinite(minutely?.windGust)
+        ? minutely.windGust
+        : validNumber(current.wind_gusts_10m)
+  };
+}
+
 function hasUsableEnsembleData(data){
   return Boolean(
     data?.hourly?.time?.length &&
@@ -2346,9 +3201,14 @@ async function fetchAllAvailableEnsembles(latitude,longitude){
   const results = await mapWithConcurrency(
     ENSEMBLE_MODELS,
     4,
+
     async definition=>{
       const data = await fetchJson(
-        ensembleUrl(latitude,longitude,definition.id),
+        ensembleUrl(
+          latitude,
+          longitude,
+          definition.id
+        ),
         definition.label
       );
 
@@ -2416,49 +3276,67 @@ function weatherText(code){
 }
 
 function average(values){
-  const valid = values.filter(Number.isFinite);
+  const valid =
+    values.filter(Number.isFinite);
 
   return valid.length
-    ? valid.reduce((total,value)=>total + value,0) / valid.length
+    ? valid.reduce(
+        (total,value)=>total + value,
+        0
+      ) / valid.length
     : 0;
 }
 
 function sum(values){
   return values
     .filter(Number.isFinite)
-    .reduce((total,value)=>total + value,0);
+    .reduce(
+      (total,value)=>total + value,
+      0
+    );
 }
 
 function maximum(values){
-  const valid = values.filter(Number.isFinite);
-  return valid.length ? Math.max(...valid) : 0;
+  const valid =
+    values.filter(Number.isFinite);
+
+  return valid.length
+    ? Math.max(...valid)
+    : 0;
 }
 
 function minimum(values){
-  const valid = values.filter(Number.isFinite);
-  return valid.length ? Math.min(...valid) : 0;
+  const valid =
+    values.filter(Number.isFinite);
+
+  return valid.length
+    ? Math.min(...valid)
+    : 0;
 }
 
 function circularMeanDegrees(values){
-  const valid = values.filter(Number.isFinite);
+  const valid =
+    values.filter(Number.isFinite);
 
   if(!valid.length){
     return 0;
   }
 
-  const x = valid.reduce(
-    (total,value)=>
-      total +
-      Math.cos(value * Math.PI / 180),
-    0
-  );
+  const x =
+    valid.reduce(
+      (total,value)=>
+        total +
+        Math.cos(value * Math.PI / 180),
+      0
+    );
 
-  const y = valid.reduce(
-    (total,value)=>
-      total +
-      Math.sin(value * Math.PI / 180),
-    0
-  );
+  const y =
+    valid.reduce(
+      (total,value)=>
+        total +
+        Math.sin(value * Math.PI / 180),
+      0
+    );
 
   return (
     Math.atan2(y,x) *
@@ -2491,8 +3369,48 @@ function formatTime(value){
     : "–";
 }
 
+function formatDistance(distance){
+  if(!Number.isFinite(distance)){
+    return "Entfernung unbekannt";
+  }
+
+  if(distance < 1000){
+    return `${Math.round(distance)} m`;
+  }
+
+  return `${(distance / 1000).toFixed(1).replace(".",",")} km`;
+}
+
+function formatAge(minutes){
+  if(!Number.isFinite(minutes)){
+    return "Zeit unbekannt";
+  }
+
+  if(minutes < 2){
+    return "gerade eben";
+  }
+
+  if(minutes < 60){
+    return `vor ${Math.round(minutes)} Min.`;
+  }
+
+  const hours = Math.floor(minutes / 60);
+  const rest = Math.round(minutes % 60);
+
+  return rest
+    ? `vor ${hours} Std. ${rest} Min.`
+    : `vor ${hours} Std.`;
+}
+
 function probabilityColor(value){
-  const lightness = 87 - Math.min(59,value * .56);
+  const lightness =
+    87 -
+    Math.min(
+      59,
+      value *
+      .56
+    );
+
   return `hsl(211 88% ${lightness}%)`;
 }
 
@@ -2526,9 +3444,15 @@ function updateHeader(){
     elevation;
 }
 
-function metricCard(icon,label,value,extra=""){
+function metricCard(
+  icon,
+  label,
+  value,
+  extra="",
+  className=""
+){
   return `
-    <article class="metric-card">
+    <article class="metric-card ${className}">
       <div class="metric-top">
         <div class="metric-icon">${icon}</div>
         <div class="metric-label">${label}</div>
@@ -2541,11 +3465,18 @@ function metricCard(icon,label,value,extra=""){
 }
 
 function findCurrentHourlyIndex(){
-  const times = currentForecast?.hourly?.time || [];
-  const now = Date.now();
+  const times =
+    currentForecast?.hourly?.time ||
+    [];
 
-  let nearestIndex = 0;
-  let nearestDifference = Infinity;
+  const now =
+    Date.now();
+
+  let nearestIndex =
+    0;
+
+  let nearestDifference =
+    Infinity;
 
   times.forEach((time,index)=>{
     const difference =
@@ -2555,8 +3486,11 @@ function findCurrentHourlyIndex(){
       );
 
     if(difference < nearestDifference){
-      nearestDifference = difference;
-      nearestIndex = index;
+      nearestDifference =
+        difference;
+
+      nearestIndex =
+        index;
     }
   });
 
@@ -2564,7 +3498,8 @@ function findCurrentHourlyIndex(){
 }
 
 function getRawHourlyRange(count,startAtCurrent=true){
-  const hourly = currentForecast.hourly;
+  const hourly =
+    currentForecast.hourly;
 
   const startIndex =
     startAtCurrent
@@ -2574,7 +3509,9 @@ function getRawHourlyRange(count,startAtCurrent=true){
   const result = [];
 
   for(let offset=0;offset<count;offset++){
-    const index = startIndex + offset;
+    const index =
+      startIndex +
+      offset;
 
     if(!hourly.time?.[index]){
       break;
@@ -2588,22 +3525,66 @@ function getRawHourlyRange(count,startAtCurrent=true){
       index,
       time:hourly.time[index],
       date:new Date(hourly.time[index]),
-      temperature:hourly.temperature_2m?.[index],
-      humidity:hourly.relative_humidity_2m?.[index] ?? 0,
-      dewPoint:hourly.dew_point_2m?.[index],
-      apparent:hourly.apparent_temperature?.[index],
-      probability:hourly.precipitation_probability?.[index] ?? 0,
-      precipitation:hourly.precipitation?.[index] ?? 0,
-      rain:hourly.rain?.[index] ?? 0,
-      showers:hourly.showers?.[index] ?? 0,
-      snowfall:hourly.snowfall?.[index] ?? 0,
-      cloud:hourly.cloud_cover?.[index] ?? 0,
-      cloudLow:hourly.cloud_cover_low?.[index] ?? 0,
-      cloudMid:hourly.cloud_cover_mid?.[index] ?? 0,
-      cloudHigh:hourly.cloud_cover_high?.[index] ?? 0,
-      visibility:hourly.visibility?.[index],
-      code:hourly.weather_code?.[index],
-      isDay:Number(hourly.is_day?.[index]) === 1,
+
+      temperature:
+        hourly.temperature_2m?.[index],
+
+      humidity:
+        hourly.relative_humidity_2m?.[index] ??
+        0,
+
+      dewPoint:
+        hourly.dew_point_2m?.[index],
+
+      apparent:
+        hourly.apparent_temperature?.[index],
+
+      probability:
+        hourly.precipitation_probability?.[index] ??
+        0,
+
+      precipitation:
+        hourly.precipitation?.[index] ??
+        0,
+
+      rain:
+        hourly.rain?.[index] ??
+        0,
+
+      showers:
+        hourly.showers?.[index] ??
+        0,
+
+      snowfall:
+        hourly.snowfall?.[index] ??
+        0,
+
+      cloud:
+        hourly.cloud_cover?.[index] ??
+        0,
+
+      cloudLow:
+        hourly.cloud_cover_low?.[index] ??
+        0,
+
+      cloudMid:
+        hourly.cloud_cover_mid?.[index] ??
+        0,
+
+      cloudHigh:
+        hourly.cloud_cover_high?.[index] ??
+        0,
+
+      visibility:
+        hourly.visibility?.[index],
+
+      code:
+        hourly.weather_code?.[index],
+
+      isDay:
+        Number(
+          hourly.is_day?.[index]
+        ) === 1,
 
       wind:
         (
@@ -2620,7 +3601,8 @@ function getRawHourlyRange(count,startAtCurrent=true){
         KMH_PER_KNOT,
 
       directionFrom,
-      directionTo:(directionFrom + 180) % 360
+      directionTo:
+        (directionFrom + 180) % 360
     });
   }
 
@@ -2635,7 +3617,8 @@ function aggregateHourlyRange(hours,step){
   const result = [];
 
   for(let index=0;index<hours.length;index+=step){
-    const block = hours.slice(index,index + step);
+    const block =
+      hours.slice(index,index + step);
 
     if(!block.length){
       continue;
@@ -2651,13 +3634,17 @@ function aggregateHourlyRange(hours,step){
         .slice()
         .sort((a,b)=>{
           const scoreA =
-            a.precipitation * 2 +
-            a.probability / 50 +
+            a.precipitation *
+            2 +
+            a.probability /
+            50 +
             weatherSeverity(a.code);
 
           const scoreB =
-            b.precipitation * 2 +
-            b.probability / 50 +
+            b.precipitation *
+            2 +
+            b.probability /
+            50 +
             weatherSeverity(b.code);
 
           return scoreB - scoreA;
@@ -2666,30 +3653,100 @@ function aggregateHourlyRange(hours,step){
     result.push({
       time:block[0].time,
       date:block[0].date,
-      temperature:average(block.map(hour=>hour.temperature)),
-      humidity:average(block.map(hour=>hour.humidity)),
-      dewPoint:average(block.map(hour=>hour.dewPoint)),
-      apparent:average(block.map(hour=>hour.apparent)),
-      probability:maximum(block.map(hour=>hour.probability)),
-      precipitation:sum(block.map(hour=>hour.precipitation)),
-      rain:sum(block.map(hour=>hour.rain)),
-      showers:sum(block.map(hour=>hour.showers)),
-      snowfall:sum(block.map(hour=>hour.snowfall)),
-      cloud:average(block.map(hour=>hour.cloud)),
-      cloudLow:average(block.map(hour=>hour.cloudLow)),
-      cloudMid:average(block.map(hour=>hour.cloudMid)),
-      cloudHigh:average(block.map(hour=>hour.cloudHigh)),
-      visibility:minimum(block.map(hour=>hour.visibility)),
-      code:representative.code,
+
+      temperature:
+        average(
+          block.map(hour=>hour.temperature)
+        ),
+
+      humidity:
+        average(
+          block.map(hour=>hour.humidity)
+        ),
+
+      dewPoint:
+        average(
+          block.map(hour=>hour.dewPoint)
+        ),
+
+      apparent:
+        average(
+          block.map(hour=>hour.apparent)
+        ),
+
+      probability:
+        maximum(
+          block.map(hour=>hour.probability)
+        ),
+
+      precipitation:
+        sum(
+          block.map(hour=>hour.precipitation)
+        ),
+
+      rain:
+        sum(
+          block.map(hour=>hour.rain)
+        ),
+
+      showers:
+        sum(
+          block.map(hour=>hour.showers)
+        ),
+
+      snowfall:
+        sum(
+          block.map(hour=>hour.snowfall)
+        ),
+
+      cloud:
+        average(
+          block.map(hour=>hour.cloud)
+        ),
+
+      cloudLow:
+        average(
+          block.map(hour=>hour.cloudLow)
+        ),
+
+      cloudMid:
+        average(
+          block.map(hour=>hour.cloudMid)
+        ),
+
+      cloudHigh:
+        average(
+          block.map(hour=>hour.cloudHigh)
+        ),
+
+      visibility:
+        minimum(
+          block.map(hour=>hour.visibility)
+        ),
+
+      code:
+        representative.code,
 
       isDay:
-        block.filter(hour=>hour.isDay).length >=
-        block.length / 2,
+        block.filter(
+          hour=>hour.isDay
+        ).length >=
+        block.length /
+        2,
 
-      wind:average(block.map(hour=>hour.wind)),
-      gust:maximum(block.map(hour=>hour.gust)),
+      wind:
+        average(
+          block.map(hour=>hour.wind)
+        ),
+
+      gust:
+        maximum(
+          block.map(hour=>hour.gust)
+        ),
+
       directionFrom,
-      directionTo:(directionFrom + 180) % 360
+      directionTo:
+        (directionFrom + 180) % 360
     });
   }
 
@@ -2703,36 +3760,67 @@ function getHourlyRange(hours=24,step=1){
   );
 }
 
+/* Dashboard */
+
 function renderDashboard(){
-  const current = currentForecast.current || {};
-  const air = currentAirQuality?.current || {};
-  const isDay = Number(current.is_day) === 1;
+  const current =
+    currentForecast.current ||
+    {};
+
+  const air =
+    currentAirQuality?.current ||
+    {};
+
+  const verified =
+    verifiedCurrent ||
+    verifyCurrentConditions(
+      currentForecast,
+      currentObservation
+    );
+
+  const humidity =
+    verified.selectedHumidity;
+
+  const dewPoint =
+    verified.selectedDewPoint;
+
+  const stationClass =
+    ["verified","station","blended"].includes(
+      verified.quality
+    )
+      ? "station-value"
+      : "";
 
   $("dashboardSubtitle").textContent =
     selectedPlace ||
     "Standort";
 
   $("currentIcon").textContent =
-    weatherIcon(current.weather_code,isDay);
+    weatherIcon(
+      verified.weatherCode,
+      verified.isDay
+    );
 
   $("currentTemperature").textContent =
-    Number.isFinite(current.temperature_2m)
-      ? `${Math.round(current.temperature_2m)}°`
+    Number.isFinite(verified.modelTemperature)
+      ? `${Math.round(verified.modelTemperature)}°`
       : "–";
 
   $("currentFeels").textContent =
-    Number.isFinite(current.apparent_temperature)
-      ? `Gefühlt ${Math.round(current.apparent_temperature)} °C`
+    Number.isFinite(verified.apparentTemperature)
+      ? `Gefühlt ${Math.round(verified.apparentTemperature)} °C`
       : "";
 
   $("currentCondition").textContent =
-    weatherText(current.weather_code);
+    weatherText(verified.weatherCode);
 
   $("currentTime").textContent =
-    current.time
+    verified.currentTime
       ? (
           "Datenstand " +
-          new Date(current.time).toLocaleString(
+          new Date(
+            verified.currentTime
+          ).toLocaleString(
             "de-DE",
             {
               weekday:"short",
@@ -2756,27 +3844,47 @@ function renderDashboard(){
   $("metricGrid").innerHTML = [
     metricCard(
       "💧",
-      "Feuchte / Taupunkt",
+      "Luftfeuchte",
 
-      Number.isFinite(current.relative_humidity_2m)
-        ? `${Math.round(current.relative_humidity_2m)} %`
+      Number.isFinite(humidity)
+        ? `${Math.round(humidity)} %`
         : "–",
 
-      Number.isFinite(current.dew_point_2m)
-        ? `Taupunkt ${Math.round(current.dew_point_2m)} °C`
-        : ""
+      Number.isFinite(dewPoint)
+        ? (
+            `Taupunkt ${dewPoint.toFixed(1).replace(".",",")} °C` +
+            `<br>${verified.humiditySource}`
+          )
+        : verified.humiditySource,
+
+      stationClass
+    ),
+
+    metricCard(
+      "🌫️",
+      "Taupunkt",
+
+      Number.isFinite(dewPoint)
+        ? `${dewPoint.toFixed(1).replace(".",",")} °C`
+        : "–",
+
+      Number.isFinite(humidity)
+        ? `Relative Feuchte ${Math.round(humidity)} %`
+        : "",
+
+      stationClass
     ),
 
     metricCard(
       "🌡️",
       "Gefühlte Temperatur",
 
-      Number.isFinite(current.apparent_temperature)
-        ? `${Math.round(current.apparent_temperature)} °C`
+      Number.isFinite(verified.apparentTemperature)
+        ? `${Math.round(verified.apparentTemperature)} °C`
         : "–",
 
-      Number.isFinite(current.temperature_2m)
-        ? `Lufttemperatur ${Math.round(current.temperature_2m)} °C`
+      Number.isFinite(verified.modelTemperature)
+        ? `Lufttemperatur ${verified.modelTemperature.toFixed(1).replace(".",",")} °C`
         : ""
     ),
 
@@ -2784,17 +3892,21 @@ function renderDashboard(){
       "🌬️",
       "Wind",
 
-      Number.isFinite(current.wind_speed_10m)
-        ? `${Math.round(current.wind_speed_10m / KMH_PER_KNOT)} kt`
-        : "–"
+      Number.isFinite(verified.windSpeed)
+        ? `${Math.round(verified.windSpeed / KMH_PER_KNOT)} kt`
+        : "–",
+
+      Number.isFinite(verified.windDirection)
+        ? `${Math.round(verified.windDirection)}°`
+        : ""
     ),
 
     metricCard(
       "💨",
       "Böen",
 
-      Number.isFinite(current.wind_gusts_10m)
-        ? `${Math.round(current.wind_gusts_10m / KMH_PER_KNOT)} kt`
+      Number.isFinite(verified.windGust)
+        ? `${Math.round(verified.windGust / KMH_PER_KNOT)} kt`
         : "–"
     ),
 
@@ -2813,16 +3925,20 @@ function renderDashboard(){
 
       Number.isFinite(current.pressure_msl)
         ? `${Math.round(current.pressure_msl)} hPa`
-        : "–"
+        : "–",
+
+      "Auf Meereshöhe"
     ),
 
     metricCard(
       "🌧️",
       "Niederschlag",
 
-      Number.isFinite(current.precipitation)
-        ? `${current.precipitation.toFixed(1)} mm`
-        : "–"
+      Number.isFinite(verified.precipitation)
+        ? `${verified.precipitation.toFixed(1)} mm`
+        : "–",
+
+      "Aktuelles 15-Minuten-Intervall"
     ),
 
     metricCard(
@@ -2861,33 +3977,242 @@ function renderDashboard(){
         : `${Math.round(currentForecast.elevation || 0)} m`,
 
       "ü. NHN"
-    ),
-
-    metricCard(
-      "↕️",
-      "Tagesspanne",
-
-      Number.isFinite(
-        currentForecast.daily?.temperature_2m_max?.[0]
-      )
-        ? (
-            `${Math.round(
-              currentForecast.daily.temperature_2m_min[0]
-            )}° bis ` +
-            `${Math.round(
-              currentForecast.daily.temperature_2m_max[0]
-            )}°`
-          )
-        : "–"
     )
   ].join("");
 
+  renderCurrentQuality();
+  renderObservationPanel();
   renderHazards();
   renderDashboardHours();
 }
 
+function renderCurrentQuality(){
+  const quality =
+    $("currentQuality");
+
+  quality.className =
+    "current-quality";
+
+  if(
+    verifiedCurrent?.quality === "verified" ||
+    verifiedCurrent?.quality === "station"
+  ){
+    quality.classList.add("verified");
+
+    $("currentQualityIcon").textContent =
+      "✓";
+
+    $("currentQualityText").textContent =
+      `Feuchte und Taupunkt mit aktueller DWD-Stationsmessung ` +
+      `(${formatDistance(currentObservation?.distance)}) geprüft.`;
+
+    return;
+  }
+
+  if(verifiedCurrent?.quality === "blended"){
+    quality.classList.add("partial");
+
+    $("currentQualityIcon").textContent =
+      "≈";
+
+    $("currentQualityText").textContent =
+      "Stationsmessung und hochaufgelöste Best-Match-Analyse wurden plausibilisiert und kombiniert.";
+
+    return;
+  }
+
+  if(currentObservation){
+    quality.classList.add("partial");
+
+    $("currentQualityIcon").textContent =
+      "!";
+
+    $("currentQualityText").textContent =
+      "Stationsdaten waren zu alt, zu weit entfernt oder nicht ausreichend plausibel; Best Match wird verwendet.";
+
+    return;
+  }
+
+  $("currentQualityIcon").textContent =
+    "◌";
+
+  $("currentQualityText").textContent =
+    shouldLoadDwdStation(
+      Number($("latitude").value),
+      Number($("longitude").value)
+    )
+      ? "Keine geeignete aktuelle DWD-Stationsmessung verfügbar; hochaufgelöste Best-Match-Daten werden verwendet."
+      : "Aktuelle Werte basieren auf der hochaufgelösten Best-Match-Analyse am gewählten Standort.";
+}
+
+function observationItem(label,value){
+  return `
+    <div class="observation-item">
+      <div class="observation-label">${label}</div>
+      <div class="observation-value">${value}</div>
+    </div>
+  `;
+}
+
+function renderObservationPanel(){
+  const panel =
+    $("observationPanel");
+
+  panel.className =
+    "observation-panel visible";
+
+  if(!currentObservation){
+    $("observationState").textContent =
+      "Best Match";
+
+    $("observationDescription").textContent =
+      shouldLoadDwdStation(
+        Number($("latitude").value),
+        Number($("longitude").value)
+      )
+        ? "Im zulässigen Umkreis wurde keine ausreichend aktuelle und verwertbare DWD-Stationsmessung gefunden. Die aktuellen Werte stammen deshalb aus der standortbezogenen 15-Minuten-Best-Match-Analyse."
+        : "Für diesen Standort wird die aktuelle hochaufgelöste 15-Minuten-Best-Match-Analyse verwendet.";
+
+    $("observationGrid").innerHTML = [
+      observationItem(
+        "Datenquelle",
+        "Open-Meteo Best Match"
+      ),
+
+      observationItem(
+        "Zeitauflösung",
+        "15 Minuten"
+      ),
+
+      observationItem(
+        "Luftfeuchte",
+        Number.isFinite(verifiedCurrent?.modelHumidity)
+          ? `${Math.round(verifiedCurrent.modelHumidity)} %`
+          : "–"
+      ),
+
+      observationItem(
+        "Taupunkt",
+        Number.isFinite(verifiedCurrent?.modelDewPoint)
+          ? `${verifiedCurrent.modelDewPoint.toFixed(1).replace(".",",")} °C`
+          : "–"
+      ),
+
+      observationItem(
+        "Prüfstatus",
+        "Modellanalyse"
+      )
+    ].join("");
+
+    return;
+  }
+
+  const accepted =
+    ["verified","station","blended"].includes(
+      verifiedCurrent?.quality
+    );
+
+  panel.classList.add(
+    accepted
+      ? "verified"
+      : "warning"
+  );
+
+  $("observationState").textContent =
+    accepted
+      ? (
+          verifiedCurrent.quality === "blended"
+            ? "Kombiniert"
+            : "Stationsgeprüft"
+        )
+      : "Nicht übernommen";
+
+  const station =
+    currentObservation;
+
+  $("observationDescription").textContent =
+    accepted
+      ? (
+          `Messwerte der Station ${station.stationName} wurden auf Alter, ` +
+          `Entfernung und die physikalische Konsistenz von Temperatur, ` +
+          `Luftfeuchte und Taupunkt geprüft.`
+        )
+      : (
+          `Die Messwerte der Station ${station.stationName} wurden geprüft, ` +
+          `wegen Alter, Entfernung oder auffälliger Abweichungen jedoch ` +
+          `nicht direkt als aktuelle Standortwerte übernommen.`
+        );
+
+  $("observationGrid").innerHTML = [
+    observationItem(
+      "Station",
+      station.stationName
+    ),
+
+    observationItem(
+      "Entfernung",
+      formatDistance(station.distance)
+    ),
+
+    observationItem(
+      "Messzeit",
+      formatAge(station.ageMinutes)
+    ),
+
+    observationItem(
+      "Feuchte Station",
+      Number.isFinite(station.relativeHumidity)
+        ? `${Math.round(station.relativeHumidity)} %`
+        : "–"
+    ),
+
+    observationItem(
+      "Taupunkt Station",
+      Number.isFinite(station.dewPoint)
+        ? `${station.dewPoint.toFixed(1).replace(".",",")} °C`
+        : "–"
+    ),
+
+    observationItem(
+      "Feuchte Best Match",
+      Number.isFinite(verifiedCurrent?.modelHumidity)
+        ? `${Math.round(verifiedCurrent.modelHumidity)} %`
+        : "–"
+    ),
+
+    observationItem(
+      "Taupunkt Best Match",
+      Number.isFinite(verifiedCurrent?.modelDewPoint)
+        ? `${verifiedCurrent.modelDewPoint.toFixed(1).replace(".",",")} °C`
+        : "–"
+    ),
+
+    observationItem(
+      "Feuchteabweichung",
+      Number.isFinite(verifiedCurrent?.humidityDifference)
+        ? `${verifiedCurrent.humidityDifference.toFixed(0)} %-Pkt.`
+        : "–"
+    ),
+
+    observationItem(
+      "Taupunktabweichung",
+      Number.isFinite(verifiedCurrent?.dewPointDifference)
+        ? `${verifiedCurrent.dewPointDifference.toFixed(1).replace(".",",")} K`
+        : "–"
+    ),
+
+    observationItem(
+      "Stationshöhe",
+      Number.isFinite(station.height)
+        ? `${Math.round(station.height)} m`
+        : "–"
+    )
+  ].join("");
+}
+
 function renderDashboardHours(){
-  const hours = getHourlyRange(8,1);
+  const hours =
+    getHourlyRange(8,1);
 
   $("dashboardHourly").innerHTML =
     hours.map(hour=>`
@@ -2922,7 +4247,9 @@ function renderDashboardHours(){
 }
 
 function renderHazards(){
-  const hours = getHourlyRange(24,1);
+  const hours =
+    getHourlyRange(24,1);
+
   const hazards = [];
 
   const maximumTemperature =
@@ -2968,7 +4295,11 @@ function renderHazards(){
 
   if(minimumTemperature <= 1){
     hazards.push({
-      severity:minimumTemperature <= -5 ? 4 : 2,
+      severity:
+        minimumTemperature <= -5
+          ? 4
+          : 2,
+
       icon:"❄️",
       title:"Frost- oder Glättepotenzial",
       text:`Tiefstwerte bis etwa ${Math.round(minimumTemperature)} °C.`
@@ -2977,7 +4308,11 @@ function renderHazards(){
 
   if(maximumGust >= 35){
     hazards.push({
-      severity:maximumGust >= 49 ? 4 : 3,
+      severity:
+        maximumGust >= 49
+          ? 4
+          : 3,
+
       icon:"💨",
       title:"Stürmische Böen",
       text:`Böen bis etwa ${Math.round(maximumGust)} kt.`
@@ -2986,7 +4321,11 @@ function renderHazards(){
 
   if(totalRain >= 20){
     hazards.push({
-      severity:totalRain >= 35 ? 4 : 3,
+      severity:
+        totalRain >= 35
+          ? 4
+          : 3,
+
       icon:"🌧️",
       title:"Starkregenpotenzial",
       text:`Etwa ${totalRain.toFixed(0)} mm in den nächsten 24 Stunden.`
@@ -3006,13 +4345,17 @@ function renderHazards(){
     });
   }
 
-  const banner = $("hazardBanner");
-  banner.className = "hazard-banner visible";
+  const banner =
+    $("hazardBanner");
+
+  banner.className =
+    "hazard-banner visible";
 
   if(!hazards.length){
     banner.classList.add("none");
 
-    $("hazardBannerIcon").textContent = "✅";
+    $("hazardBannerIcon").textContent =
+      "✅";
 
     $("hazardBannerTitle").textContent =
       "Keine markanten Wettergefahren erkannt";
@@ -3027,7 +4370,8 @@ function renderHazards(){
     (a,b)=>b.severity - a.severity
   );
 
-  const primary = hazards[0];
+  const primary =
+    hazards[0];
 
   banner.classList.add(
     primary.severity >= 4
@@ -3071,24 +4415,33 @@ function representativeWeatherCode(points){
     .sort((a,b)=>{
       const scoreA =
         weatherSeverity(a.code) +
-        a.precipitation * 1.7 +
-        a.probability / 60;
+        a.precipitation *
+        1.7 +
+        a.probability /
+        60;
 
       const scoreB =
         weatherSeverity(b.code) +
-        b.precipitation * 1.7 +
-        b.probability / 60;
+        b.precipitation *
+        1.7 +
+        b.probability /
+        60;
 
       return scoreB - scoreA;
     })[0].code;
 }
 
 function weatherIconsByDay(forecast){
-  const grouped = new Map();
-  const hourly = forecast.hourly || {};
+  const grouped =
+    new Map();
+
+  const hourly =
+    forecast.hourly ||
+    {};
 
   (hourly.time || []).forEach((time,index)=>{
-    const date = time.slice(0,10);
+    const date =
+      time.slice(0,10);
 
     if(!grouped.has(date)){
       grouped.set(date,{
@@ -3098,9 +4451,17 @@ function weatherIconsByDay(forecast){
     }
 
     const point = {
-      code:hourly.weather_code?.[index] ?? -1,
-      probability:hourly.precipitation_probability?.[index] ?? 0,
-      precipitation:hourly.precipitation?.[index] ?? 0
+      code:
+        hourly.weather_code?.[index] ??
+        -1,
+
+      probability:
+        hourly.precipitation_probability?.[index] ??
+        0,
+
+      precipitation:
+        hourly.precipitation?.[index] ??
+        0
     };
 
     if(Number(hourly.is_day?.[index]) === 1){
@@ -3110,11 +4471,15 @@ function weatherIconsByDay(forecast){
     }
   });
 
-  const result = new Map();
+  const result =
+    new Map();
 
   grouped.forEach((period,date)=>{
     const middle =
-      Math.ceil(period.day.length / 2);
+      Math.ceil(
+        period.day.length /
+        2
+      );
 
     const morning =
       period.day.slice(0,middle);
@@ -3148,7 +4513,9 @@ function weatherIconsByDay(forecast){
         ) >= 2,
 
       nightCode:
-        representativeWeatherCode(period.night)
+        representativeWeatherCode(
+          period.night
+        )
     });
   });
 
@@ -3156,8 +4523,12 @@ function weatherIconsByDay(forecast){
 }
 
 function dailyEnsembleData(ensemble){
-  const grouped = new Map();
-  const hourly = ensemble.data.hourly || {};
+  const grouped =
+    new Map();
+
+  const hourly =
+    ensemble.data.hourly ||
+    {};
 
   (hourly.time || []).forEach((time,index)=>{
     const temperatureMean =
@@ -3173,7 +4544,8 @@ function dailyEnsembleData(ensemble){
       return;
     }
 
-    const date = time.slice(0,10);
+    const date =
+      time.slice(0,10);
 
     if(!grouped.has(date)){
       grouped.set(date,[]);
@@ -3205,7 +4577,8 @@ function dailyEnsembleData(ensemble){
     });
   });
 
-  const result = new Map();
+  const result =
+    new Map();
 
   grouped.forEach((hours,date)=>{
     const maximumHour =
@@ -3227,14 +4600,23 @@ function dailyEnsembleData(ensemble){
       );
 
     result.set(date,{
-      highMean:maximumHour.temperatureMean,
-      highSpread:maximumHour.temperatureSpread,
-      lowMean:minimumHour.temperatureMean,
-      lowSpread:minimumHour.temperatureSpread,
+      highMean:
+        maximumHour.temperatureMean,
+
+      highSpread:
+        maximumHour.temperatureSpread,
+
+      lowMean:
+        minimumHour.temperatureMean,
+
+      lowSpread:
+        minimumHour.temperatureSpread,
 
       rainMean:
         sum(
-          hours.map(hour=>hour.precipitationMean)
+          hours.map(hour=>
+            hour.precipitationMean
+          )
         ),
 
       rainSpread:
@@ -3247,9 +4629,11 @@ function dailyEnsembleData(ensemble){
               )
             )
           )
-        ) * 1.25,
+        ) *
+        1.25,
 
-      definition:ensemble.definition
+      definition:
+        ensemble.definition
     });
   });
 
@@ -3261,21 +4645,31 @@ function ensembleWeight(definition,dayIndex){
     return 0;
   }
 
-  let weight = definition.priority;
+  let weight =
+    definition.priority;
 
   if(definition.family === "regional"){
-    weight *= dayIndex <= 1 ? 1.35 : .75;
+    weight *=
+      dayIndex <= 1
+        ? 1.35
+        : .75;
   }
 
   if(
     definition.family === "global" ||
     definition.family === "ai-global"
   ){
-    weight *= dayIndex >= 5 ? 1.2 : .9;
+    weight *=
+      dayIndex >= 5
+        ? 1.2
+        : .9;
   }
 
   if(definition.family === "global-long"){
-    weight *= dayIndex >= 8 ? 1.15 : .5;
+    weight *=
+      dayIndex >= 8
+        ? 1.15
+        : .5;
   }
 
   return weight;
@@ -3291,15 +4685,21 @@ function combineEnsembles(
     entries
       .map(entry=>({
         entry,
-        weight:ensembleWeight(
-          entry.definition,
-          dayIndex
-        )
+
+        weight:
+          ensembleWeight(
+            entry.definition,
+            dayIndex
+          )
       }))
       .filter(item=>
         item.weight > 0 &&
-        Number.isFinite(item.entry[meanKey]) &&
-        Number.isFinite(item.entry[spreadKey])
+        Number.isFinite(
+          item.entry[meanKey]
+        ) &&
+        Number.isFinite(
+          item.entry[spreadKey]
+        )
       );
 
   if(!valid.length){
@@ -3308,7 +4708,9 @@ function combineEnsembles(
 
   const weightSum =
     sum(
-      valid.map(item=>item.weight)
+      valid.map(item=>
+        item.weight
+      )
     );
 
   const mean =
@@ -3349,14 +4751,22 @@ function combineEnsembles(
 
   return {
     mean,
-    spread:Math.sqrt(Math.max(.01,variance)),
+
+    spread:
+      Math.sqrt(
+        Math.max(
+          .01,
+          variance
+        )
+      ),
 
     labels:
       valid.map(item=>
         item.entry.definition.label
       ),
 
-    modelCount:valid.length
+    modelCount:
+      valid.length
   };
 }
 
@@ -3365,7 +4775,9 @@ function mergeForecastAndEnsembles(forecast,ensembles){
     weatherIconsByDay(forecast);
 
   const ensembleMaps =
-    ensembles.map(dailyEnsembleData);
+    ensembles.map(
+      dailyEnsembleData
+    );
 
   const daily =
     forecast.daily;
@@ -3373,7 +4785,9 @@ function mergeForecastAndEnsembles(forecast,ensembles){
   return daily.time.map((date,index)=>{
     const entries =
       ensembleMaps
-        .map(map=>map.get(date))
+        .map(map=>
+          map.get(date)
+        )
         .filter(Boolean);
 
     const high =
@@ -3462,10 +4876,19 @@ function mergeForecastAndEnsembles(forecast,ensembles){
 
     const weather =
       iconMap.get(date) || {
-        firstCode:daily.weather_code?.[index] ?? -1,
-        secondCode:daily.weather_code?.[index] ?? -1,
+        firstCode:
+          daily.weather_code?.[index] ??
+          -1,
+
+        secondCode:
+          daily.weather_code?.[index] ??
+          -1,
+
         showSecond:false,
-        nightCode:daily.weather_code?.[index] ?? -1
+
+        nightCode:
+          daily.weather_code?.[index] ??
+          -1
       };
 
     const labels = [
@@ -3486,21 +4909,67 @@ function mergeForecastAndEnsembles(forecast,ensembles){
 
     return {
       date,
-      dateObject:new Date(date + "T12:00:00"),
-      firstCode:weather.firstCode,
-      secondCode:weather.secondCode,
-      showSecond:weather.showSecond,
-      nightCode:weather.nightCode,
-      maximum:maximumTemperature,
-      minimum:minimumTemperature,
-      highInnerLow:highMean - highSpread,
-      highInnerHigh:highMean + highSpread,
-      highOuterLow:highMean - 1.96 * highSpread,
-      highOuterHigh:highMean + 1.96 * highSpread,
-      lowInnerLow:lowMean - lowSpread,
-      lowInnerHigh:lowMean + lowSpread,
-      lowOuterLow:lowMean - 1.96 * lowSpread,
-      lowOuterHigh:lowMean + 1.96 * lowSpread,
+
+      dateObject:
+        new Date(
+          date +
+          "T12:00:00"
+        ),
+
+      firstCode:
+        weather.firstCode,
+
+      secondCode:
+        weather.secondCode,
+
+      showSecond:
+        weather.showSecond,
+
+      nightCode:
+        weather.nightCode,
+
+      maximum:
+        maximumTemperature,
+
+      minimum:
+        minimumTemperature,
+
+      highInnerLow:
+        highMean -
+        highSpread,
+
+      highInnerHigh:
+        highMean +
+        highSpread,
+
+      highOuterLow:
+        highMean -
+        1.96 *
+        highSpread,
+
+      highOuterHigh:
+        highMean +
+        1.96 *
+        highSpread,
+
+      lowInnerLow:
+        lowMean -
+        lowSpread,
+
+      lowInnerHigh:
+        lowMean +
+        lowSpread,
+
+      lowOuterLow:
+        lowMean -
+        1.96 *
+        lowSpread,
+
+      lowOuterHigh:
+        lowMean +
+        1.96 *
+        lowSpread,
+
       rain,
 
       rainRangeLow:
@@ -3530,7 +4999,8 @@ function mergeForecastAndEnsembles(forecast,ensembles){
             99,
             Math.round(
               99 -
-              index * 1.8 -
+              index *
+              1.8 -
               Math.min(
                 64,
                 Math.max(
@@ -3564,14 +5034,16 @@ function renderEnsembleModelInformation(){
 
     ${
       activeEnsembles.length
-        ? activeEnsembles.map(ensemble=>`
-            <span
-              class="model-tag"
-              title="${ensemble.definition.id}"
-            >
-              ${ensemble.definition.label}
-            </span>
-          `).join("")
+        ? activeEnsembles
+            .map(ensemble=>`
+              <span
+                class="model-tag"
+                title="${ensemble.definition.id}"
+              >
+                ${ensemble.definition.label}
+              </span>
+            `)
+            .join("")
         : `
           <span>
             Keine zusätzlichen ENS-Modelle verfügbar.
@@ -3810,10 +5282,26 @@ function drawTemperature14(days){
   );
 
   const top = 14;
-  const bottom = Math.max(24,height * .1);
-  const plotWidth = width - left - right;
-  const graphHeight = height - top - bottom;
-  const columnWidth = plotWidth / days.length;
+  const bottom =
+    Math.max(
+      24,
+      height *
+      .1
+    );
+
+  const plotWidth =
+    width -
+    left -
+    right;
+
+  const graphHeight =
+    height -
+    top -
+    bottom;
+
+  const columnWidth =
+    plotWidth /
+    days.length;
 
   const values = [
     ...days.map(day=>day.highOuterHigh),
@@ -4237,8 +5725,11 @@ function drawRain14(days){
         Math.max(
           3,
           Math.min(
-            columnWidth * .58,
-            mobile ? 24 : 48
+            columnWidth *
+            .58,
+            mobile
+              ? 24
+              : 48
           )
         );
 
@@ -4277,8 +5768,10 @@ function drawRain14(days){
         Math.max(
           5,
           Math.min(
-            barWidth * .52,
-            columnWidth * .3
+            barWidth *
+            .52,
+            columnWidth *
+            .3
           )
         );
 
@@ -4302,7 +5795,7 @@ function drawRain14(days){
   });
 }
 
-/* Canvas-Hilfsfunktionen */
+/* Canvas */
 
 function prepareResponsiveCanvas(
   canvas,
@@ -5571,7 +7064,7 @@ function render24HourProducts(){
     `${hourlyStep}-Stunden-Schritte · Best Match`;
 }
 
-/* Klimatologie */
+/* Klimatologie und Widget */
 
 function dayOfYear(date){
   const start =
@@ -5662,8 +7155,7 @@ function buildClimateNormals(data){
         circularDayDifference(
           targetDay,
           sourceDay
-        ) <=
-        7
+        ) <= 7
       ){
         maximumValues.push(
           ...values.maximum
@@ -5676,8 +7168,11 @@ function buildClimateNormals(data){
     });
 
     result.set(targetDay,{
-      maximum:average(maximumValues),
-      minimum:average(minimumValues)
+      maximum:
+        average(maximumValues),
+
+      minimum:
+        average(minimumValues)
     });
   }
 
@@ -5742,10 +7237,6 @@ function climateForDate(date){
   ) || null;
 }
 
-/*
-  Mildere klimatologische Farbabstufung:
-  weniger gesättigt, geringere Kontraste und breitere Stufen.
-*/
 function mildAnomalyColour(anomaly,type){
   const colours =
     type === "maximum"
@@ -5887,8 +7378,6 @@ function widgetTemperatureStyle(
   };
 }
 
-/* Widget */
-
 function widgetOptions(){
   const {
     latitude,
@@ -5958,17 +7447,13 @@ function widgetOptions(){
 
 function convertTemperature(value,unit){
   return unit === "fahrenheit"
-    ? value *
-      9 /
-      5 +
-      32
+    ? value * 9 / 5 + 32
     : value;
 }
 
 function convertRain(value,unit){
   return unit === "inch"
-    ? value /
-      25.4
+    ? value / 25.4
     : value;
 }
 
@@ -6226,10 +7711,7 @@ function createWidgetMarkup(forecast,options){
         options.showAnomaly &&
         Number.isFinite(maximumStyle.anomaly)
           ? `
-            <div
-              class="embed-anomaly"
-              title="Abweichung des Höchstwertes vom lokalen Klimamittel"
-            >
+            <div class="embed-anomaly">
               ${anomalyText(maximumStyle.anomaly)}
             </div>
           `
@@ -6316,12 +7798,8 @@ function createWidgetMarkup(forecast,options){
 }
 
 function calculateWidgetLayout(options){
-  const headerHeight =
-    62;
-
-  const dayHeaderHeight =
-    43;
-
+  const headerHeight = 62;
+  const dayHeaderHeight = 43;
   const rows = [];
 
   if(options.showIcon){
@@ -6395,14 +7873,11 @@ function calculateWidgetLayout(options){
       0
     );
 
-  const outerPadding =
-    20;
-
   const height =
     headerHeight +
     dayHeaderHeight +
     contentHeight +
-    outerPadding;
+    20;
 
   const dayWidth =
     options.days >= 7
@@ -6525,37 +8000,23 @@ async function downloadWidgetPng(){
   const layout =
     calculateWidgetLayout(options);
 
-  const scale =
-    2;
-
-  const width =
-    layout.width;
-
-  const height =
-    layout.height;
+  const scale = 2;
+  const width = layout.width;
+  const height = layout.height;
 
   const canvas =
     document.createElement("canvas");
 
   canvas.width =
-    Math.round(
-      width *
-      scale
-    );
+    Math.round(width * scale);
 
   canvas.height =
-    Math.round(
-      height *
-      scale
-    );
+    Math.round(height * scale);
 
   const context =
     canvas.getContext("2d");
 
-  context.scale(
-    scale,
-    scale
-  );
+  context.scale(scale,scale);
 
   const dark =
     options.theme === "dark";
@@ -6615,8 +8076,7 @@ async function downloadWidgetPng(){
       ? "#3b4650"
       : "#cbd3db";
 
-  context.lineWidth =
-    1;
+  context.lineWidth = 1;
 
   roundRectPath(
     context,
@@ -6637,9 +8097,6 @@ async function downloadWidgetPng(){
 
   context.textAlign =
     "left";
-
-  context.textBaseline =
-    "alphabetic";
 
   context.fillText(
     options.place,
@@ -6662,22 +8119,11 @@ async function downloadWidgetPng(){
     51
   );
 
-  const gridLeft =
-    12;
-
-  const gridTop =
-    layout.headerHeight;
-
-  const gridWidth =
-    width -
-    24;
-
-  const dayWidth =
-    gridWidth /
-    options.days;
-
-  const daily =
-    currentForecast.daily;
+  const gridLeft = 12;
+  const gridTop = layout.headerHeight;
+  const gridWidth = width - 24;
+  const dayWidth = gridWidth / options.days;
+  const daily = currentForecast.daily;
 
   for(let index=0;index<options.days;index++){
     const date =
@@ -6725,27 +8171,6 @@ async function downloadWidgetPng(){
       convertTemperature(
         rawMinimum,
         options.temperatureUnit
-      );
-
-    const wind =
-      convertWind(
-        daily.wind_speed_10m_max?.[index] ??
-        0,
-        options.windUnit
-      );
-
-    const gust =
-      convertWind(
-        daily.wind_gusts_10m_max?.[index] ??
-        0,
-        options.windUnit
-      );
-
-    const rain =
-      convertRain(
-        daily.precipitation_sum?.[index] ??
-        0,
-        options.rainUnit
       );
 
     context.fillStyle =
@@ -6813,8 +8238,7 @@ async function downloadWidgetPng(){
         37
       );
 
-      y +=
-        58;
+      y += 58;
     }
 
     if(options.showMaximum){
@@ -6846,8 +8270,7 @@ async function downloadWidgetPng(){
         22
       );
 
-      y +=
-        34;
+      y += 34;
     }
 
     if(options.showMinimum){
@@ -6879,8 +8302,7 @@ async function downloadWidgetPng(){
         22
       );
 
-      y +=
-        34;
+      y += 34;
     }
 
     if(options.showAnomaly){
@@ -6899,9 +8321,29 @@ async function downloadWidgetPng(){
         18
       );
 
-      y +=
-        27;
+      y += 27;
     }
+
+    const wind =
+      convertWind(
+        daily.wind_speed_10m_max?.[index] ??
+        0,
+        options.windUnit
+      );
+
+    const gust =
+      convertWind(
+        daily.wind_gusts_10m_max?.[index] ??
+        0,
+        options.windUnit
+      );
+
+    const rain =
+      convertRain(
+        daily.precipitation_sum?.[index] ??
+        0,
+        options.rainUnit
+      );
 
     context.fillStyle =
       textColour;
@@ -6917,8 +8359,7 @@ async function downloadWidgetPng(){
         18
       );
 
-      y +=
-        27;
+      y += 27;
     }
 
     if(options.showGusts){
@@ -6929,8 +8370,7 @@ async function downloadWidgetPng(){
         18
       );
 
-      y +=
-        27;
+      y += 27;
     }
 
     if(options.showDirection){
@@ -6969,8 +8409,7 @@ async function downloadWidgetPng(){
 
       context.restore();
 
-      y +=
-        34;
+      y += 34;
     }
 
     context.fillStyle =
@@ -6997,8 +8436,7 @@ async function downloadWidgetPng(){
         18
       );
 
-      y +=
-        27;
+      y += 27;
     }
 
     if(options.showProbability){
@@ -7011,41 +8449,6 @@ async function downloadWidgetPng(){
         y +
         18
       );
-
-      y +=
-        27;
-    }
-
-    if(index < options.days - 1){
-      context.strokeStyle =
-        dark
-          ? "rgba(255,255,255,.14)"
-          : "#dce3e8";
-
-      context.beginPath();
-
-      context.moveTo(
-        gridLeft +
-        (
-          index +
-          1
-        ) *
-        dayWidth,
-        gridTop
-      );
-
-      context.lineTo(
-        gridLeft +
-        (
-          index +
-          1
-        ) *
-        dayWidth,
-        height -
-        12
-      );
-
-      context.stroke();
     }
   }
 
@@ -7157,6 +8560,12 @@ function showSearchResults(results){
       $("longitude").value =
         Number(place.longitude).toFixed(4);
 
+      selectedCountryCode =
+        String(
+          place.country_code ||
+          ""
+        ).toUpperCase();
+
       selectedElevation =
         Number.isFinite(place.elevation)
           ? place.elevation
@@ -7182,6 +8591,12 @@ function showSearchResults(results){
 
       climateCacheKey =
         "";
+
+      currentObservation =
+        null;
+
+      verifiedCurrent =
+        null;
 
       closeSearchResults();
       loadAll();
@@ -7299,7 +8714,7 @@ async function loadAll(){
     true;
 
   setStatus(
-    "Best Match, Luftqualität und alle am Ort verfügbaren ENS-Modelle werden geladen …"
+    "Best Match, aktuelle Stationsmessungen, Luftqualität und verfügbare ENS-Modelle werden geladen …"
   );
 
   try{
@@ -7308,10 +8723,19 @@ async function loadAll(){
       longitude
     } = coordinates();
 
+    const stationPromise =
+      shouldLoadDwdStation(latitude,longitude)
+        ? fetchNearbyStationObservation(
+            latitude,
+            longitude
+          )
+        : Promise.resolve(null);
+
     const [
       forecastResult,
       airQualityResult,
-      ensemblesResult
+      ensemblesResult,
+      stationResult
     ] = await Promise.allSettled([
       fetchJson(
         forecastUrl(
@@ -7332,7 +8756,9 @@ async function loadAll(){
       fetchAllAvailableEnsembles(
         latitude,
         longitude
-      )
+      ),
+
+      stationPromise
     ]);
 
     if(forecastResult.status !== "fulfilled"){
@@ -7351,6 +8777,17 @@ async function loadAll(){
       ensemblesResult.status === "fulfilled"
         ? ensemblesResult.value
         : [];
+
+    currentObservation =
+      stationResult.status === "fulfilled"
+        ? stationResult.value
+        : null;
+
+    verifiedCurrent =
+      verifyCurrentConditions(
+        currentForecast,
+        currentObservation
+      );
 
     if(!Number.isFinite(selectedElevation)){
       selectedElevation =
@@ -7387,8 +8824,18 @@ async function loadAll(){
         }
       );
 
+    const stationStatus =
+      ["verified","station"].includes(
+        verifiedCurrent.quality
+      )
+        ? ` + DWD-Station ${currentObservation.stationName}`
+        : verifiedCurrent.quality === "blended"
+          ? " + plausibilisierte Stations-/Modelldaten"
+          : "";
+
     setStatus(
       "Best Match" +
+      stationStatus +
       (
         activeEnsembles.length
           ? ` + ${activeEnsembles.length} verfügbare ENS-Modelle`
@@ -7449,12 +8896,26 @@ function locate(){
       selectedPlace =
         "Aktueller Standort";
 
+      selectedCountryCode =
+        isLikelyGermany(
+          position.coords.latitude,
+          position.coords.longitude
+        )
+          ? "DE"
+          : "";
+
       selectedElevation =
         Number.isFinite(
           position.coords.altitude
         )
           ? position.coords.altitude
           : null;
+
+      currentObservation =
+        null;
+
+      verifiedCurrent =
+        null;
 
       climateNormals =
         null;
@@ -7538,8 +8999,7 @@ $("fiveDayFitControl").addEventListener("click",()=>{
 });
 
 $("step1Button").addEventListener("click",()=>{
-  hourlyStep =
-    1;
+  hourlyStep = 1;
 
   $("step1Button")
     .classList
@@ -7553,8 +9013,7 @@ $("step1Button").addEventListener("click",()=>{
 });
 
 $("step3Button").addEventListener("click",()=>{
-  hourlyStep =
-    3;
+  hourlyStep = 3;
 
   $("step3Button")
     .classList
@@ -7618,21 +9077,15 @@ $("downloadWidgetButton").addEventListener(
 });
 
 $("placeSearch").addEventListener("input",event=>{
-  selectedPlace =
-    "";
+  selectedPlace = "";
+  selectedCountryCode = "";
+  selectedElevation = null;
+  currentObservation = null;
+  verifiedCurrent = null;
+  climateNormals = null;
+  climateCacheKey = "";
 
-  selectedElevation =
-    null;
-
-  climateNormals =
-    null;
-
-  climateCacheKey =
-    "";
-
-  clearTimeout(
-    searchTimer
-  );
+  clearTimeout(searchTimer);
 
   searchTimer =
     setTimeout(()=>{
@@ -7666,13 +9119,10 @@ document.addEventListener("click",event=>{
   }
 });
 
-let resizeTimer =
-  null;
+let resizeTimer = null;
 
 window.addEventListener("resize",()=>{
-  clearTimeout(
-    resizeTimer
-  );
+  clearTimeout(resizeTimer);
 
   resizeTimer =
     setTimeout(()=>{
